@@ -2,15 +2,14 @@ import asyncio
 import os
 import aiodns
 import random
-from .blocklist import BlocklistManager
+import json
+from .blocklist import BlocklistManager, CONFIG_PATH
 from .logger import log_query, init_db
 from .updater import Updater
 
-UPSTREAM_DNS = ['8.8.8.8', '8.8.4.4']
 DNS_PORT = 5353
 DNS_HOST = '127.0.0.1'
 
-# List of domains for simulated queries during mock testing
 MOCK_DOMAINS = [
     "google.com", "facebook.com", "doubleclick.net", "analytics.google.com",
     "github.com", "amazon.com", "adnxs.com", "taboola.com", "reddit.com",
@@ -20,26 +19,34 @@ MOCK_DOMAINS = [
 class DNSServer:
     def __init__(self, blocklist_manager):
         self.blocklist_manager = blocklist_manager
-        self.resolver = aiodns.DNSResolver(nameservers=UPSTREAM_DNS)
+        self.update_resolver()
+
+    def update_resolver(self):
+        self.resolver = aiodns.DNSResolver(nameservers=self.blocklist_manager.upstream_dns)
 
     async def handle_query(self, data, addr, transport):
-        # Placeholder for real DNS parsing using dnslib
-        # For simulation, we randomly pick a domain if parsing is not implemented
+        # Simulation: Pick random domain or use provided (if parsed)
         domain = random.choice(MOCK_DOMAINS)
         client_ip = addr[0]
+
+        # Check Local DNS
+        local_ip = self.blocklist_manager.resolve_local(domain)
+        if local_ip:
+            status = "LOCAL"
+            log_query(domain, client_ip, status)
+            print(f"Local Resolution: {domain} -> {local_ip}")
+            return
 
         if self.blocklist_manager.is_blocked(domain):
             status = "BLOCKED"
             log_query(domain, client_ip, status)
-            print(f"Blocked: {domain} from {client_ip}")
             return
 
         status = "ALLOWED"
         log_query(domain, client_ip, status)
-        print(f"Allowed: {domain} from {client_ip}")
 
         try:
-            # result = await self.resolver.query(domain, 'A')
+            # await self.resolver.query(domain, 'A')
             pass
         except Exception as e:
             print(f"Error resolving {domain}: {e}")
@@ -70,11 +77,8 @@ class DNSProtocol(asyncio.DatagramProtocol):
 
 def main():
     manager = BlocklistManager()
-
-    # Start Updater
     updater = Updater(manager)
     updater.start()
-
     server = DNSServer(manager)
     asyncio.run(server.start())
 

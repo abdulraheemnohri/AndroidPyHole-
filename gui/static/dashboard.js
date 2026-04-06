@@ -22,29 +22,11 @@ const queriesChart = new Chart(ctx, {
     options: {
         responsive: true,
         plugins: {
-            legend: {
-                labels: {
-                    color: '#e5e2e1'
-                }
-            }
+            legend: { labels: { color: '#e5e2e1' } }
         },
         scales: {
-            x: {
-                grid: {
-                    color: '#353534'
-                },
-                ticks: {
-                    color: '#becab9'
-                }
-            },
-            y: {
-                grid: {
-                    color: '#353534'
-                },
-                ticks: {
-                    color: '#becab9'
-                }
-            }
+            x: { grid: { color: '#353534' }, ticks: { color: '#becab9' } },
+            y: { grid: { color: '#353534' }, ticks: { color: '#becab9' } }
         }
     }
 });
@@ -59,36 +41,36 @@ async function updateStats() {
         document.getElementById('block-rate').textContent =
             (data.total_queries > 0 ? (data.blocked_queries / data.total_queries * 100).toFixed(2) : '0.00') + '%';
 
-        const list = document.getElementById('top-domains-list');
-        list.innerHTML = '';
-        if (data.top_domains && data.top_domains.length > 0) {
-            data.top_domains.forEach(([domain, count]) => {
+        const updateList = (id, list) => {
+            const el = document.getElementById(id);
+            el.innerHTML = '';
+            if (list && list.length > 0) {
+                list.forEach(({domain, count}) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${domain}</span> <strong>${count}</strong>`;
+                    el.appendChild(li);
+                });
+            } else {
                 const li = document.createElement('li');
-                li.innerHTML = `<span>${domain}</span> <strong>${count}</strong>`;
-                list.appendChild(li);
-            });
-        } else {
-            const li = document.createElement('li');
-            li.textContent = 'No blocked domains yet';
-            list.appendChild(li);
-        }
+                li.textContent = 'None yet';
+                el.appendChild(li);
+            }
+        };
 
-        // Update chart
-        const now = new Date().toLocaleTimeString();
-        if (queriesChart.data.labels.length > 20) {
-            queriesChart.data.labels.shift();
-            queriesChart.data.datasets[0].data.shift();
-            queriesChart.data.datasets[1].data.shift();
+        updateList('top-blocked-list', data.top_blocked);
+        updateList('top-allowed-list', data.top_allowed);
+
+        if (data.chart_labels && data.chart_labels.length > 0) {
+            queriesChart.data.labels = data.chart_labels;
+            queriesChart.data.datasets[0].data = data.chart_total;
+            queriesChart.data.datasets[1].data = data.chart_blocked;
+            queriesChart.update();
         }
-        queriesChart.data.labels.push(now);
-        queriesChart.data.datasets[0].data.push(data.total_queries);
-        queriesChart.data.datasets[1].data.push(data.blocked_queries);
-        queriesChart.update();
 
     } catch (error) {
         console.error("Failed to update stats:", error);
     }
 }
 
-setInterval(updateStats, 5000);
+setInterval(updateStats, 10000);
 updateStats();

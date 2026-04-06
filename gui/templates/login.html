@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AndroidPyHole Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="dark-mode">
+    <div class="container" style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+        <div class="card" style="max-width: 400px; width: 100%; text-align: center;">
+            <h1>PYHOLE</h1>
+            <h3>Enter Dashboard Password</h3>
+            <form method="POST">
+                <input type="password" name="password" placeholder="Password" style="width: 100%; padding: 15px; margin-bottom: 20px; background: var(--bg-color); color: white; border-radius: 8px;">
+                {% if error %}<p style="color: var(--secondary-color);">{{ error }}</p>{% endif %}
+                <button type="submit" style="width: 100%;">Unlock Dashboard</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

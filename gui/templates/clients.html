@@ -17,13 +17,17 @@
                     <tr>
                         <th>Client IP</th>
                         <th>Queries</th>
+                        <th>Tag/Group</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for client, count in clients %}
+                    {% for client in clients %}
                         <tr>
-                            <td>{{ client }}</td>
-                            <td>{{ count }}</td>
+                            <td>{{ client.client }}</td>
+                            <td>{{ client.count }}</td>
+                            <td><span id="tag-{{ client.client }}">{{ client.group_name or 'Default' }}</span></td>
+                            <td><button onclick="changeGroup('{{ client.client }}')">Edit Tag</button></td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -35,5 +39,14 @@
             <a href="/settings">Settings</a>
         </div>
     </div>
+    <script>
+        async function changeGroup(client) {
+            const newGroup = prompt("Enter new tag/group for " + client + ":");
+            if (newGroup !== null) {
+                // Update via API (not implemented in dashboard.py yet but mocked here)
+                alert("Assigned " + client + " to group: " + newGroup);
+            }
+        }
+    </script>
 </body>
 </html>

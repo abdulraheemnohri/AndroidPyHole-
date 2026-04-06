@@ -12,7 +12,8 @@
         <h1>QUERY LOGS</h1>
         <div class="card">
             <h3>Recent Activity</h3>
-            <table>
+            <input type="text" id="log-filter" placeholder="Filter by domain or client..." onkeyup="filterLogs()">
+            <table id="logs-table">
                 <thead>
                     <tr>
                         <th>Time</th>
@@ -22,12 +23,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for timestamp, domain, client, status in logs %}
-                        <tr class="{{ 'status-blocked' if status == 'BLOCKED' else 'status-allowed' }}">
-                            <td>{{ timestamp }}</td>
-                            <td>{{ domain }}</td>
-                            <td>{{ client }}</td>
-                            <td><strong>{{ status }}</strong></td>
+                    {% for log in logs %}
+                        <tr class="{{ 'status-blocked' if log.status == 'BLOCKED' else 'status-allowed' }}">
+                            <td>{{ log.timestamp }}</td>
+                            <td>{{ log.domain }}</td>
+                            <td>{{ log.client }}</td>
+                            <td><strong>{{ log.status }}</strong></td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -39,5 +40,21 @@
             <a href="/settings">Settings</a>
         </div>
     </div>
+    <script>
+        function filterLogs() {
+            const filter = document.getElementById('log-filter').value.toLowerCase();
+            const table = document.getElementById('logs-table');
+            const trs = table.getElementsByTagName('tr');
+            for (let i = 1; i < trs.length; i++) {
+                const domain = trs[i].getElementsByTagName('td')[1].textContent.toLowerCase();
+                const client = trs[i].getElementsByTagName('td')[2].textContent.toLowerCase();
+                if (domain.includes(filter) || client.includes(filter)) {
+                    trs[i].style.display = "";
+                } else {
+                    trs[i].style.display = "none";
+                }
+            }
+        }
+    </script>
 </body>
 </html>
