@@ -1,50 +1,68 @@
-# AndroidPyHole: The Ultimate Ad-Blocking Experience on Android
+# AndroidPyHole: The Ultimate Private DNS & Ad-Blocking Solution for Android
 
-AndroidPyHole is a comprehensive, feature-rich Pi-hole clone built specifically for Android. It combines the power of a Python-based DNS engine with the accessibility of an Android app, providing enterprise-grade network security and ad-blocking without the need for external hardware.
+AndroidPyHole is an advanced, absolute ultimate feature-complete Pi-hole clone built for Android. It leverages a powerful Python-based DNS engine (asyncio/aiodns) and the Android VPNService API to provide a seamless, hardware-free network security experience for both rooted and rootless devices.
 
-## 🌟 Features Breakdown
+## 🚀 Key Feature Highlights
 
-### 🛠️ Core Engine
-- **Asynchronous DNS Handling**: High-performance resolution using `asyncio` and `aiodns`.
-- **Rootless Operation**: Seamlessly intercepts device traffic using the Android VPNService API.
-- **Rooted Support**: Direct binding to port 53 for full system-wide coverage.
-- **Automated Gravity Updates**: Daily blocklist synchronization to keep your protection fresh.
+### 🛡️ Professional DNS Engine
+- **Full Packet Parsing**: Real DNS packet inspection using `dnslib`.
+- **Regex Filter Engine**: Support for complex regular expression blocking patterns.
+- **Per-Client Control**: Assign specific blocking rules and tags to individual devices.
+- **Local DNS Mapping**: Custom hostname resolution (e.g., mapping `pi.hole` to your local instance).
+- **Encrypted Upstreams**: Configurable support for DNS-over-HTTPS (DoH) and DNS-over-TLS (DoT).
 
-### 📊 Advanced Dashboard & Analytics
-- **Live Monitoring**: Real-time stats for total queries, blocks, and percentage blocked.
-- **Trend Visualizations**: Beautiful 24-hour traffic charts and advanced query type distributions.
-- **Detailed Query Logs**: Filterable, color-coded history of all DNS activity.
-- **Client Intelligence**: Monitor traffic per device and assign custom tags/groups.
+### 📊 Advanced Analytics & Dashboard
+- **Real-time Monitoring**: Instant visibility into network traffic, block rates, and cache hits.
+- **Hourly Trends**: 24-hour visual traffic charts using Chart.js.
+- **Client Intelligence**: Detailed breakdown of top-requesting devices and their status.
+- **Audit Logs**: Filterable, color-coded history of every DNS query handled.
 
-### 🔒 Privacy & Security
-- **Dashboard Authentication**: Secure your statistics and settings with a custom password.
-- **Multiple Privacy Modes**:
-    - **Show All**: Default full-visibility mode.
-    - **Anonymous**: Masks domains and client IPs in all logs and stats.
-    - **Hide All**: Disables all data visualization for maximum privacy.
-- **Encrypted Upstreams**: Full blueprint for DNS-over-HTTPS (DoH) and DNS-over-TLS (DoT).
+### 🔒 Enterprise-Grade Security & Privacy
+- **Authenticated Dashboard**: Password-protected access to your statistics and settings.
+- **Tiered Privacy Modes**:
+    - **Show All**: Standard full visibility.
+    - **Anonymous**: Mask all domains and client IPs in the UI and logs.
+    - **Hide All**: Maximum privacy; no logs or statistics are displayed.
+- **Secure Storage**: All data is kept locally in a secure SQLite database.
 
-### ⚙️ Full Management Control
-- **Whitelist/Blacklist**: Dedicated management for always-allowed or always-blocked domains.
-- **Local DNS Records**: Custom hostname mapping (e.g., redirecting `pi.hole` to the local dashboard).
-- **Upstream DNS Selection**: Easily switch between Google, Cloudflare, OpenDNS, or custom providers.
-- **Configuration Management**: Effortlessly **Export** or **Import** your entire setup via JSON.
+### 🛠️ Diagnostic & Management Tools
+- **Network Scanner**: Discover and identify active devices on your local network.
+- **System Alerts**: Real-time notifications for unusual DNS activity or system events.
+- **Gravity Maintenance**: Automated and manual blocklist synchronization.
+- **Config Portability**: Effortlessly **Export** or **Import** your entire configuration via JSON.
+- **System Tools**: Flush logs, clear DNS cache, and restart the DNS engine from the UI.
 
-### 🎨 Premium User Experience
-- **Modern UI**: Dark-mode primary theme (Obsidian Shield) with a toggleable light-mode option.
-- **Responsive Web Dashboard**: Accessible from any local browser at `http://127.0.0.1:8080`.
-- **Branded Splash Screen**: A professional entry experience for the Android application.
+### 🎨 Premium Experience
+- **Adaptive UI**: High-contrast 'Obsidian Shield' dark mode with a clean light mode alternative.
+- **Mobile Optimized**: Responsive web dashboard served via embedded Flask and Android WebView.
+- **Branded Startup**: Custom Splash Screen for a professional application experience.
 
-## 🚀 Quick Start (Build Instructions)
+## 🏗️ Technical Architecture
 
-1. **Setup Assets**: Run `./build_scripts/setup_python.sh` to initialize assets.
-2. **Open in Android Studio**: Sync Gradle and ensure all dependencies are met.
-3. **Build APK**: Run `./gradlew assembleDebug` or use the Build menu.
-4. **Deploy**: Install the APK on your device and launch "PYHOLE".
+- **Backend (Python 3.10+)**: Asyncio resolution engine, Flask web server, and SQLite storage.
+- **Frontend (Kotlin)**: Life-cycle management, VPNService bridge, and WebView integration.
+- **Integration**: Powered by **Chaquopy** for high-performance Python-on-Android execution.
 
-## 📦 CI/CD
-- **Testing**: Automated unit tests for all Python backend components.
-- **Publishing**: Workflows included for releasing Python packages, NPM assets, and Android libraries.
+## 🛠️ Build & Development
+
+### 1. Initialize Assets
+Prepare the Python and Web assets:
+```bash
+./build_scripts/setup_python.sh
+```
+
+### 2. Android Build
+Open the root directory in **Android Studio (Giraffe+)**, sync Gradle, and build:
+```bash
+./gradlew assembleDebug
+```
+
+## 📦 CI/CD Pipeline
+Fully configured GitHub Actions:
+- `testing.yml`: Automatic unit tests (Python) and build verification.
+- `apk-debug.yml`: Manual build and artifact upload for debug APKs.
+- `apk-release.yml`: Release build automation.
+- `multi-package`: Publishing workflows for Python (PyPI), Web (NPM), and Android (Maven).
 
 ---
-*MIT Licensed | Created for private and educational network security.*
+*Created for secure, private, and educational network management. Licensed under MIT.*

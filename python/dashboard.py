@@ -6,7 +6,8 @@ import datetime
 import threading
 import secrets
 from .blocklist import BlocklistManager, CONFIG_PATH
-from .logger import get_alerts
+from .logger import get_alerts, cleanup_logs
+from .clients import scan_network
 
 app = Flask(__name__, template_folder='../gui/templates', static_folder='../gui/static')
 app.secret_key = secrets.token_hex(16)
@@ -42,9 +43,18 @@ def logout():
     session.pop('authenticated', None)
     return redirect(url_for('login'))
 
+@app.route('/network')
+def network_page():
+    devices = scan_network()
+    return render_template('network.html', devices=devices)
+
 @app.route('/alerts')
 def alerts_page():
     return render_template('alerts.html', alerts=get_alerts())
+
+@app.route('/tools')
+def tools_page():
+    return render_template('tools.html')
 
 @app.route('/export-config')
 def export_config():
@@ -106,7 +116,9 @@ def api_stats():
     return jsonify({
         'total_queries': total, 'blocked_queries': blocked,
         'top_blocked': top_blocked, 'top_allowed': top_allowed, 'top_clients': top_clients,
-        'domains_on_blocklist': len(manager.blocked_domains)
+        'domains_on_blocklist': len(manager.blocked_domains),
+        'cache_size': 124, # Mock cache size
+        'cache_hits': 42   # Mock cache hits
     })
 
 @app.route('/api/settings', methods=['POST'])
@@ -116,6 +128,14 @@ def api_save_settings():
         if k in manager.__dict__:
             setattr(manager, k, set(v) if isinstance(manager.__dict__[k], set) else v)
     manager.save_config()
+    return jsonify({"status": "success"})
+
+@app.route('/api/action/flush-logs', methods=['POST'])
+def api_flush_logs():
+    conn = get_db_conn()
+    conn.execute("DELETE FROM queries")
+    conn.commit()
+    conn.close()
     return jsonify({"status": "success"})
 
 @app.route('/api/update-gravity', methods=['POST'])

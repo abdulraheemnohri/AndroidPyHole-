@@ -33,6 +33,14 @@ def get_recent_logs(limit=100):
     conn.close()
     return logs
 
+def cleanup_logs(days_retention):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    cutoff = (datetime.datetime.now() - datetime.timedelta(days=days_retention)).isoformat()
+    c.execute("DELETE FROM queries WHERE timestamp < ?", (cutoff,))
+    conn.commit()
+    conn.close()
+
 def add_alert(alert_type, message, severity="INFO"):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
