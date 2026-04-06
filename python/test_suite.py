@@ -7,8 +7,6 @@ from logger import init_db, log_query, get_recent_logs
 
 class TestPyHole(unittest.TestCase):
     def setUp(self):
-        self.db_path = os.path.join(os.path.dirname(__file__), '../storage/logs/query_log.db')
-        self.config_path = os.path.join(os.path.dirname(__file__), '../storage/config.json')
         init_db()
 
     def test_logger(self):
@@ -22,6 +20,10 @@ class TestPyHole(unittest.TestCase):
         manager.custom_blocked.add("bad.com")
         self.assertTrue(manager.is_blocked("bad.com"))
         self.assertFalse(manager.is_blocked("good.com"))
+
+        # Test client specific blocking
+        manager.client_rules["10.0.0.5"] = {"blocked": True}
+        self.assertTrue(manager.is_blocked("google.com", "10.0.0.5"))
 
 if __name__ == "__main__":
     unittest.main()

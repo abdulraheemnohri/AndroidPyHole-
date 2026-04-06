@@ -20,6 +20,7 @@ android {
                 install "flask"
                 install "aiodns"
                 install "requests"
+                install "dnslib"
             }
         }
     }
