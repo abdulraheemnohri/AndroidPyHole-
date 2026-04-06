@@ -145,3 +145,12 @@ th, td {
     text-decoration: none;
     margin: 0 10px;
 }
+.status-blocked {
+    background-color: rgba(255, 180, 169, 0.05);
+}
+.status-blocked strong {
+    color: var(--secondary-color);
+}
+.status-allowed strong {
+    color: var(--primary-color);
+}
