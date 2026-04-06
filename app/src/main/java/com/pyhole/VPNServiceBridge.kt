@@ -6,6 +6,7 @@ import android.util.Log
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
+import android.content.pm.PackageManager
 
 class VPNServiceBridge : VpnService(), Runnable {
     private var vpnInterface: ParcelFileDescriptor? = null
@@ -26,16 +27,20 @@ class VPNServiceBridge : VpnService(), Runnable {
         val builder = Builder()
         builder.setSession("PyHoleX")
         builder.addAddress("10.0.0.2", 32)
-        // Redirect all DNS to local Rust engine port 5353
         builder.addDnsServer("127.0.0.1")
         builder.addRoute("0.0.0.0", 0)
 
+        // Example: Exclude PyHoleX itself from the VPN to avoid loops
+        try {
+            builder.addDisallowedApplication(packageName)
+        } catch (e: PackageManager.NameNotFoundException) {
+            Log.e("VPN", "Package not found", e)
+        }
+
         vpnInterface = builder.establish()
-        Log.i("VPNService", "PyHoleX VPN established. DNS -> 127.0.0.1:5353")
     }
 
     override fun run() {
-        // High-performance packet loop (blueprint)
         try {
             val input = FileInputStream(vpnInterface?.fileDescriptor)
             val output = FileOutputStream(vpnInterface?.fileDescriptor)
@@ -44,13 +49,16 @@ class VPNServiceBridge : VpnService(), Runnable {
             while (isRunning) {
                 val length = input.read(packet.array())
                 if (length > 0) {
+                    // Logic to identify source app (simplified blueprint)
+                    // On Android, we can track UIDs if we parse the IP headers manually
+                    // For the blueprint, we assume app identification is handled via Netlink or UID tracking
                     packet.limit(length)
                     output.write(packet.array(), 0, length)
                     packet.clear()
                 }
             }
         } catch (e: Exception) {
-            Log.e("VPNService", "VPN runtime error: ${e.message}")
+            Log.e("VPNService", "Error: ${e.message}")
         }
     }
 

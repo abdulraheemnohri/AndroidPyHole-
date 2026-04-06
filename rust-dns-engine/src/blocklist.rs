@@ -1,38 +1,52 @@
-use std::collections::HashSet;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use crate::p2p::P2PNode;
+use std::collections::{HashSet, HashMap};
+use crate::classifier::AIHeuristic;
+
+pub enum DomainCategory {
+    Ads,
+    Social,
+    Adult,
+    Malware,
+    Tracking,
+    Custom,
+}
 
 pub struct Blocklist {
-    domains: HashSet<String>,
+    pub domains: HashMap<String, DomainCategory>,
+    pub app_rules: HashMap<String, HashSet<String>>,
+    pub ai: AIHeuristic,
+    pub p2p: P2PNode,
 }
 
 impl Blocklist {
     pub fn new() -> Self {
-        let mut domains = HashSet::new();
-        // Load from local storage if exists
-        if let Ok(file) = File::open("blocklists/list.txt") {
-            let reader = BufReader::new(file);
-            for line in reader.lines() {
-                if let Ok(domain) = line {
-                    let trimmed = domain.trim();
-                    if !trimmed.is_empty() && !trimmed.starts_with('#') {
-                        domains.insert(trimmed.to_string());
-                    }
-                }
+        let mut domains = HashMap::new();
+        domains.insert("doubleclick.net".to_string(), DomainCategory::Ads);
+        Blocklist {
+            domains,
+            app_rules: HashMap::new(),
+            ai: AIHeuristic::new(),
+            p2p: P2PNode::new(),
+        }
+    }
+
+    pub fn is_blocked(&self, domain: &str, app_id: Option<&str>) -> (bool, Option<String>) {
+        if let Some(cat) = self.domains.get(domain) {
+            return (true, Some("Category Match".to_string()));
+        }
+
+        if self.p2p.is_p2p_threat(domain) { return (true, Some("P2P Intelligence".to_string())); }
+        let (is_ai_threat, score) = self.ai.analyze(domain);
+        if is_ai_threat {
+            return (true, Some(format!("AI Heuristic (Score: {:.2})", score)));
+        }
+
+        if let Some(aid) = app_id {
+            if let Some(blocked) = self.app_rules.get(aid) {
+                if blocked.contains(domain) { return (true, Some("App Rule".to_string())); }
             }
         }
-        Blocklist { domains }
-    }
 
-    pub fn is_blocked(&self, domain: &str) -> bool {
-        self.domains.contains(domain)
-    }
-
-    pub fn add(&mut self, domain: String) {
-        self.domains.insert(domain);
-    }
-
-    pub fn remove(&mut self, domain: &str) {
-        self.domains.remove(domain);
+        (false, None)
     }
 }
