@@ -1,8 +1,10 @@
 import asyncio
 import os
 import aiodns
+import threading
 from .blocklist import BlocklistManager
 from .logger import log_query, init_db
+from .updater import Updater
 
 UPSTREAM_DNS = ['8.8.8.8', '8.8.4.4']
 DNS_PORT = 5353
@@ -14,24 +16,20 @@ class DNSServer:
         self.resolver = aiodns.DNSResolver(nameservers=UPSTREAM_DNS)
 
     async def handle_query(self, data, addr, transport):
-        # Placeholder for DNS parsing logic
-        # In a real app, use 'dnslib' to parse 'data'
-        domain = "example.com" # Mocked domain for demonstration
+        # Placeholder for real DNS parsing using dnslib
+        domain = "example.com"
         client_ip = addr[0]
 
         if self.blocklist_manager.is_blocked(domain):
             status = "BLOCKED"
             log_query(domain, client_ip, status)
-            # Return NXDOMAIN or similar (mocked)
             return
 
         status = "ALLOWED"
         log_query(domain, client_ip, status)
 
         try:
-            # Mock resolution
             result = await self.resolver.query(domain, 'A')
-            # Mock sending back data
         except Exception as e:
             print(f"Error resolving {domain}: {e}")
 
@@ -61,6 +59,11 @@ class DNSProtocol(asyncio.DatagramProtocol):
 
 def main():
     manager = BlocklistManager()
+
+    # Start Updater
+    updater = Updater(manager)
+    updater.start()
+
     server = DNSServer(manager)
     asyncio.run(server.start())
 

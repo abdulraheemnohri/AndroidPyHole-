@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AndroidPyHole Clients</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>CLIENTS</h1>
+        <div class="card">
+            <h3>Connected Devices</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Client IP</th>
+                        <th>Queries</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client, count in clients %}
+                        <tr>
+                            <td>{{ client }}</td>
+                            <td>{{ count }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="nav-links">
+            <a href="/">Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

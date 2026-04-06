@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AndroidPyHole Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>SETTINGS</h1>
+        <div class="card">
+            <h3>Blocklists</h3>
+            <ul id="blocklist-list">
+                {% for url in config.blocklists %}
+                    <li>{{ url }} <button onclick="removeBlocklist('{{ url }}')">Remove</button></li>
+                {% endfor %}
+            </ul>
+            <input type="text" id="new-blocklist" placeholder="https://example.com/hosts.txt">
+            <button onclick="addBlocklist()">Add Blocklist</button>
+        </div>
+
+        <div class="card">
+            <h3>Upstream DNS</h3>
+            <select id="upstream-dns">
+                <option value="8.8.8.8, 8.8.4.4">Google</option>
+                <option value="1.1.1.1, 1.0.0.1">Cloudflare</option>
+                <option value="208.67.222.222, 208.67.220.220">OpenDNS</option>
+            </select>
+        </div>
+
+        <div class="nav-links">
+            <a href="/">Back to Dashboard</a>
+        </div>
+    </div>
+    <script>
+        const config = {{ config|tojson }};
+
+        async function saveConfig() {
+            await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+            location.reload();
+        }
+
+        function addBlocklist() {
+            const url = document.getElementById('new-blocklist').value;
+            if (url) {
+                config.blocklists.push(url);
+                saveConfig();
+            }
+        }
+
+        function removeBlocklist(url) {
+            config.blocklists = config.blocklists.filter(u => u !== url);
+            saveConfig();
+        }
+    </script>
+</body>
+</html>
