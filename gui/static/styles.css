@@ -1,0 +1,95 @@
+:root {
+    --bg-color: #131313;
+    --surface-color: #1c1b1b;
+    --card-color: #2a2a2a;
+    --primary-color: #78dc77;
+    --secondary-color: #ffb4a9;
+    --text-primary: #e5e2e1;
+    --text-secondary: #becab9;
+    --accent-color: #4caf50;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: var(--surface-color);
+    padding: 30px;
+    border-radius: 16px;
+}
+
+h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat {
+    background: var(--card-color);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: left;
+    border-left: 4px solid var(--accent-color);
+}
+
+.stat h3 {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 10px 0;
+}
+
+.stat p {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2rem;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.top-domains {
+    margin-top: 40px;
+}
+
+.top-domains h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background: var(--card-color);
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+canvas {
+    background: var(--card-color);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 30px;
+}

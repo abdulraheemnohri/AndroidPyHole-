@@ -1,0 +1,32 @@
+plugins {
+    id 'com.android.application'
+    id 'com.chaquo.python'
+}
+
+android {
+    namespace 'com.pyhole'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.pyhole"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+
+        python {
+            buildPython "python3"
+            pip {
+                install "flask"
+                install "aiodns"
+                install "requests"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
