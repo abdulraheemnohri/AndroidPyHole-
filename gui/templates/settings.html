@@ -7,33 +7,72 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body>
+<body class="dark-mode">
     <div class="container">
         <h1>SETTINGS</h1>
+
         <div class="card">
-            <h3>Blocklists</h3>
-            <ul id="blocklist-list">
-                {% for url in config.blocklists %}
-                    <li>{{ url }} <button onclick="removeBlocklist('{{ url }}')">Remove</button></li>
-                {% endfor %}
-            </ul>
-            <input type="text" id="new-blocklist" placeholder="https://example.com/hosts.txt">
-            <button onclick="addBlocklist()">Add Blocklist</button>
+            <h3>Configuration Backup/Restore</h3>
+            <div class="input-group">
+                <a href="/export-config" class="btn">Download Configuration</a>
+                <input type="file" id="import-file" style="display:none" onchange="importConfig()">
+                <button onclick="document.getElementById('import-file').click()">Import Configuration</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Privacy Settings</h3>
+            <select id="privacy-level" onchange="savePrivacy()">
+                <option value="SHOW_ALL" {{ 'selected' if config.privacy_level == 'SHOW_ALL' }}>Show All (Default)</option>
+                <option value="ANONYMOUS" {{ 'selected' if config.privacy_level == 'ANONYMOUS' }}>Anonymous (Mask Domains)</option>
+                <option value="HIDE_ALL" {{ 'selected' if config.privacy_level == 'HIDE_ALL' }}>Hide All Statistics</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <h3>Security</h3>
+            <input type="password" id="db-password" value="{{ config.dashboard_password }}" placeholder="Set Dashboard Password">
+            <button onclick="savePassword()">Update Password</button>
+        </div>
+
+        <div class="card">
+            <h3>DNS-over-HTTPS (DoH) / TLS (DoT)</h3>
+            <div class="input-group">
+                <input type="text" id="doh-upstream" value="{{ config.doh_upstream }}" placeholder="https://cloudflare-dns.com/dns-query">
+                <button onclick="saveDoH()">Save DoH</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="dot-upstream" value="{{ config.dot_upstream }}" placeholder="dns.google:853">
+                <button onclick="saveDoT()">Save DoT</button>
+            </div>
         </div>
 
         <div class="card">
             <h3>Upstream DNS</h3>
-            <select id="upstream-dns">
-                <option value="8.8.8.8, 8.8.4.4">Google</option>
-                <option value="1.1.1.1, 1.0.0.1">Cloudflare</option>
-                <option value="208.67.222.222, 208.67.220.220">OpenDNS</option>
-            </select>
+            <input type="text" id="upstream-dns" value="{{ ', '.join(config.upstream_dns) }}">
+            <button onclick="saveUpstreamDNS()">Save DNS</button>
+        </div>
+
+        <div class="card">
+            <h3>Local DNS Records</h3>
+            <ul id="local-dns-list">
+                {% for domain, ip in config.local_dns.items() %}
+                    <li>{{ domain }} → {{ ip }} <button class="btn-remove" onclick="removeLocalDNS('{{ domain }}')">×</button></li>
+                {% endfor %}
+            </ul>
+            <div class="input-group">
+                <input type="text" id="local-domain" placeholder="pi.hole">
+                <input type="text" id="local-ip" placeholder="10.0.0.1">
+                <button onclick="addLocalDNS()">Add</button>
+            </div>
         </div>
 
         <div class="nav-links">
             <a href="/">Dashboard</a>
             <a href="/logs">Logs</a>
             <a href="/clients">Clients</a>
+            <a href="/statistics">Statistics</a>
+            <a href="/logout">Logout</a>
         </div>
     </div>
     <script>
@@ -48,18 +87,42 @@
             location.reload();
         }
 
-        function addBlocklist() {
-            const url = document.getElementById('new-blocklist').value;
-            if (url) {
-                config.blocklists.push(url);
-                saveConfig();
+        async function importConfig() {
+            const file = document.getElementById('import-file').files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('config_file', file);
+            const r = await fetch('/import-config', { method: 'POST', body: formData });
+            const data = await r.json();
+            if (data.status === 'success') {
+                alert('Configuration imported successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
             }
         }
 
-        function removeBlocklist(url) {
-            config.blocklists = config.blocklists.filter(u => u !== url);
+        function savePrivacy() { config.privacy_level = document.getElementById('privacy-level').value; saveConfig(); }
+        function savePassword() { config.dashboard_password = document.getElementById('db-password').value; saveConfig(); }
+        function saveDoH() { config.doh_upstream = document.getElementById('doh-upstream').value; saveConfig(); }
+        function saveDoT() { config.dot_upstream = document.getElementById('dot-upstream').value; saveConfig(); }
+
+        function saveUpstreamDNS() {
+            const dns = document.getElementById('upstream-dns').value;
+            config.upstream_dns = dns.split(',').map(s => s.trim());
             saveConfig();
         }
+        function addLocalDNS() {
+            const domain = document.getElementById('local-domain').value;
+            const ip = document.getElementById('local-ip').value;
+            if (domain && ip) { config.local_dns[domain] = ip; saveConfig(); }
+        }
+        function removeLocalDNS(domain) { delete config.local_dns[domain]; saveConfig(); }
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+        }
+        if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
     </script>
 </body>
 </html>

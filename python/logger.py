@@ -10,10 +10,14 @@ def init_db():
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS queries
                  (timestamp TEXT, domain TEXT, client TEXT, status TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS client_groups
+                 (client TEXT PRIMARY KEY, group_name TEXT)''')
     conn.commit()
     conn.close()
 
 def log_query(domain, client, status):
+    # This logic can be enhanced to respect privacy settings globally,
+    # but currently dashboard.py handles masking upon reading for visibility.
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     timestamp = datetime.datetime.now().isoformat()
@@ -28,6 +32,3 @@ def get_recent_logs(limit=100):
     logs = c.fetchall()
     conn.close()
     return logs
-
-if __name__ == "__main__":
-    init_db()

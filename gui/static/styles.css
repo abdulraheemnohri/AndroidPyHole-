@@ -10,6 +10,16 @@
     --error-color: #ffb4ab;
 }
 
+body.light-mode {
+    --bg-color: #f4f4f4;
+    --surface-color: #ffffff;
+    --card-color: #e9e9e9;
+    --primary-color: #2e7d32;
+    --secondary-color: #c62828;
+    --text-primary: #212121;
+    --text-secondary: #616161;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-color);
@@ -86,7 +96,7 @@ ul {
 li {
     background: var(--surface-color);
     margin-bottom: 10px;
-    padding: 15px;
+    padding: 10px 15px;
     border-radius: 8px;
     display: flex;
     justify-content: space-between;
@@ -107,6 +117,14 @@ button:hover {
     opacity: 0.8;
 }
 
+.btn-remove {
+    background: transparent;
+    color: var(--secondary-color);
+    font-size: 1.5rem;
+    padding: 0 5px;
+    line-height: 1;
+}
+
 input[type="text"] {
     background: var(--bg-color);
     border: 1px solid var(--card-color);
@@ -114,6 +132,7 @@ input[type="text"] {
     padding: 10px;
     border-radius: 6px;
     width: 70%;
+    margin-bottom: 10px;
 }
 
 select {
@@ -145,12 +164,29 @@ th, td {
     text-decoration: none;
     margin: 0 10px;
 }
-.status-blocked {
-    background-color: rgba(255, 180, 169, 0.05);
+
+.status-blocked { background-color: rgba(255, 180, 169, 0.05); }
+.status-blocked strong { color: var(--secondary-color); }
+.status-allowed strong { color: var(--primary-color); }
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
 }
-.status-blocked strong {
-    color: var(--secondary-color);
+
+.input-group input {
+    flex: 1;
+    margin-bottom: 0;
 }
-.status-allowed strong {
-    color: var(--primary-color);
+.btn {
+    background-color: var(--primary-color);
+    color: #131313;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
 }

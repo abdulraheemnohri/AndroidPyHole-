@@ -1,80 +1,50 @@
-# AndroidPyHole
+# AndroidPyHole: The Ultimate Ad-Blocking Experience on Android
 
-AndroidPyHole is a full-featured Pi-hole clone for Android devices. It provides DNS-level ad and tracker blocking using a Python backend and an Android VPNService, allowing it to work on both rooted and rootless devices.
+AndroidPyHole is a comprehensive, feature-rich Pi-hole clone built specifically for Android. It combines the power of a Python-based DNS engine with the accessibility of an Android app, providing enterprise-grade network security and ad-blocking without the need for external hardware.
 
-## Features
+## 🌟 Features Breakdown
 
-- **DNS Ad/Tracker Blocking**: Intercepts DNS queries and blocks them based on custom or community blocklists.
-- **Rootless Operation**: Uses the Android VPNService API to redirect DNS traffic without requiring root.
-- **Web Dashboard**: An embedded Flask-based dashboard for viewing real-time statistics, query logs, and managing settings.
-- **Query Logs**: A detailed, filterable view of recent DNS activity (Allowed vs. Blocked).
-- **Blocklist Management**: Automatically updates blocklists and allows for custom domain blocking/allowing.
-- **Query Logging**: Persistent SQLite database for tracking all DNS queries and block rates.
-- **Client Management**: Track and manage different devices making DNS requests.
-- **Modern UI**: Dark-mode dashboard inspired by the 'Obsidian Shield' design system.
-- **Splash Screen**: Professional app entry with branded splash activity.
+### 🛠️ Core Engine
+- **Asynchronous DNS Handling**: High-performance resolution using `asyncio` and `aiodns`.
+- **Rootless Operation**: Seamlessly intercepts device traffic using the Android VPNService API.
+- **Rooted Support**: Direct binding to port 53 for full system-wide coverage.
+- **Automated Gravity Updates**: Daily blocklist synchronization to keep your protection fresh.
 
-## Architecture
+### 📊 Advanced Dashboard & Analytics
+- **Live Monitoring**: Real-time stats for total queries, blocks, and percentage blocked.
+- **Trend Visualizations**: Beautiful 24-hour traffic charts and advanced query type distributions.
+- **Detailed Query Logs**: Filterable, color-coded history of all DNS activity.
+- **Client Intelligence**: Monitor traffic per device and assign custom tags/groups.
 
-- **Android Frontend (Kotlin)**: Manages the VPNService and the life cycle of the Python backend via Chaquopy.
-- **Python Backend**: Handles DNS resolution (asyncio/aiodns), blocklist management, and the Flask web server for the dashboard.
-- **Web Dashboard (Flask/HTML/JS)**: Accessible within the app's WebView or from any local browser.
+### 🔒 Privacy & Security
+- **Dashboard Authentication**: Secure your statistics and settings with a custom password.
+- **Multiple Privacy Modes**:
+    - **Show All**: Default full-visibility mode.
+    - **Anonymous**: Masks domains and client IPs in all logs and stats.
+    - **Hide All**: Disables all data visualization for maximum privacy.
+- **Encrypted Upstreams**: Full blueprint for DNS-over-HTTPS (DoH) and DNS-over-TLS (DoT).
 
-## Getting Started: Build-Ready Instructions
+### ⚙️ Full Management Control
+- **Whitelist/Blacklist**: Dedicated management for always-allowed or always-blocked domains.
+- **Local DNS Records**: Custom hostname mapping (e.g., redirecting `pi.hole` to the local dashboard).
+- **Upstream DNS Selection**: Easily switch between Google, Cloudflare, OpenDNS, or custom providers.
+- **Configuration Management**: Effortlessly **Export** or **Import** your entire setup via JSON.
 
-### 1. Prerequisites
+### 🎨 Premium User Experience
+- **Modern UI**: Dark-mode primary theme (Obsidian Shield) with a toggleable light-mode option.
+- **Responsive Web Dashboard**: Accessible from any local browser at `http://127.0.0.1:8080`.
+- **Branded Splash Screen**: A professional entry experience for the Android application.
 
-- **Android Studio (Giraffe or newer)**
-- **Java JDK 17+**
-- **Python 3.10+** (installed on build machine)
-- **Internet Connection** (to download dependencies)
+## 🚀 Quick Start (Build Instructions)
 
-### 2. Setup the Environment
+1. **Setup Assets**: Run `./build_scripts/setup_python.sh` to initialize assets.
+2. **Open in Android Studio**: Sync Gradle and ensure all dependencies are met.
+3. **Build APK**: Run `./gradlew assembleDebug` or use the Build menu.
+4. **Deploy**: Install the APK on your device and launch "PYHOLE".
 
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/your-repo/AndroidPyHole.git
-    cd AndroidPyHole
-    ```
+## 📦 CI/CD
+- **Testing**: Automated unit tests for all Python backend components.
+- **Publishing**: Workflows included for releasing Python packages, NPM assets, and Android libraries.
 
-2.  **Initialize Python Assets**:
-    Run the setup script to copy python and web assets to the appropriate Android project directories:
-    ```bash
-    ./build_scripts/setup_python.sh
-    ```
-
-### 3. Build and Run
-
-1.  **Open in Android Studio**:
-    Open the root folder of the project in Android Studio.
-
-2.  **Sync Project with Gradle Files**:
-    Ensure all dependencies (Chaquopy, Android SDK, etc.) are downloaded.
-
-3.  **Build the APK**:
-    From the terminal:
-    ```bash
-    ./gradlew assembleDebug
-    ```
-    Or use **Build > Build Bundle(s) / APK(s) > Build APK(s)** in Android Studio.
-
-4.  **Install on Device**:
-    Use ADB or the Android Studio "Run" button to deploy to your device.
-
-## Project Structure
-
-- `app/`: Android Kotlin source code, resources, and build configuration.
-- `python/`: Core backend logic (DNS server, blocklist manager, logger, etc.).
-- `gui/`: HTML, CSS, and JS files for the web-based dashboard.
-- `storage/`: Placeholder for local data storage (logs, blocklists, config).
-- `build_scripts/`: Scripts for initializing and packaging the project.
-
-## Credits
-
-- **Pi-hole**: Inspiration for the DNS blocking functionality and dashboard.
-- **Chaquopy**: For enabling Python integration in Android.
-- **Asyncio/aiodns**: For efficient asynchronous DNS handling in Python.
-
-## License
-
-MIT License
+---
+*MIT Licensed | Created for private and educational network security.*
