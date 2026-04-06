@@ -3,27 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AndroidPyHole Clients</title>
+    <title>AndroidPyHole Logs</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>CLIENTS</h1>
+        <h1>QUERY LOGS</h1>
         <div class="card">
-            <h3>Connected Devices</h3>
+            <h3>Recent Activity</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>Client IP</th>
-                        <th>Queries</th>
+                        <th>Time</th>
+                        <th>Domain</th>
+                        <th>Client</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for client, count in clients %}
-                        <tr>
+                    {% for timestamp, domain, client, status in logs %}
+                        <tr class="{{ 'status-blocked' if status == 'BLOCKED' else 'status-allowed' }}">
+                            <td>{{ timestamp }}</td>
+                            <td>{{ domain }}</td>
                             <td>{{ client }}</td>
-                            <td>{{ count }}</td>
+                            <td><strong>{{ status }}</strong></td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -31,7 +35,7 @@
         </div>
         <div class="nav-links">
             <a href="/">Dashboard</a>
-            <a href="/logs">Logs</a>
+            <a href="/clients">Clients</a>
             <a href="/settings">Settings</a>
         </div>
     </div>

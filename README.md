@@ -7,10 +7,12 @@ AndroidPyHole is a full-featured Pi-hole clone for Android devices. It provides 
 - **DNS Ad/Tracker Blocking**: Intercepts DNS queries and blocks them based on custom or community blocklists.
 - **Rootless Operation**: Uses the Android VPNService API to redirect DNS traffic without requiring root.
 - **Web Dashboard**: An embedded Flask-based dashboard for viewing real-time statistics, query logs, and managing settings.
+- **Query Logs**: A detailed, filterable view of recent DNS activity (Allowed vs. Blocked).
 - **Blocklist Management**: Automatically updates blocklists and allows for custom domain blocking/allowing.
 - **Query Logging**: Persistent SQLite database for tracking all DNS queries and block rates.
 - **Client Management**: Track and manage different devices making DNS requests.
 - **Modern UI**: Dark-mode dashboard inspired by the 'Obsidian Shield' design system.
+- **Splash Screen**: Professional app entry with branded splash activity.
 
 ## Architecture
 

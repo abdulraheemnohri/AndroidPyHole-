@@ -47,6 +47,18 @@ def clients():
         conn.close()
     return render_template('clients.html', clients=clients_data)
 
+@app.route('/logs')
+def logs():
+    if not os.path.exists(DB_PATH):
+        log_data = []
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("SELECT timestamp, domain, client, status FROM queries ORDER BY timestamp DESC LIMIT 50")
+        log_data = c.fetchall()
+        conn.close()
+    return render_template('logs.html', logs=log_data)
+
 @app.route('/api/stats')
 def api_stats():
     total, blocked, top_domains = get_stats()
