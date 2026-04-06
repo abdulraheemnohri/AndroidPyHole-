@@ -3,18 +3,13 @@ import os
 import aiodns
 import random
 import json
+from dnslib import DNSRecord, QTYPE, RR, A
 from .blocklist import BlocklistManager, CONFIG_PATH
 from .logger import log_query, init_db
 from .updater import Updater
 
 DNS_PORT = 5353
 DNS_HOST = '127.0.0.1'
-
-MOCK_DOMAINS = [
-    "google.com", "facebook.com", "doubleclick.net", "analytics.google.com",
-    "github.com", "amazon.com", "adnxs.com", "taboola.com", "reddit.com",
-    "twitter.com", "googlesyndication.com", "yahoo.com", "bing.com"
-]
 
 class DNSServer:
     def __init__(self, blocklist_manager):
@@ -25,31 +20,49 @@ class DNSServer:
         self.resolver = aiodns.DNSResolver(nameservers=self.blocklist_manager.upstream_dns)
 
     async def handle_query(self, data, addr, transport):
-        # Simulation: Pick random domain or use provided (if parsed)
-        domain = random.choice(MOCK_DOMAINS)
+        try:
+            request = DNSRecord.parse(data)
+        except Exception as e:
+            print(f"Failed to parse DNS query: {e}")
+            return
+
+        qname = str(request.q.qname).rstrip('.')
+        qtype = QTYPE[request.q.qtype]
         client_ip = addr[0]
 
         # Check Local DNS
-        local_ip = self.blocklist_manager.resolve_local(domain)
-        if local_ip:
-            status = "LOCAL"
-            log_query(domain, client_ip, status)
-            print(f"Local Resolution: {domain} -> {local_ip}")
+        local_ip = self.blocklist_manager.resolve_local(qname)
+        if local_ip and qtype == 'A':
+            reply = request.reply()
+            reply.add_answer(RR(qname, QTYPE.A, rdata=A(local_ip), ttl=60))
+            transport.sendto(reply.pack(), addr)
+            log_query(qname, client_ip, "LOCAL")
             return
 
-        if self.blocklist_manager.is_blocked(domain):
-            status = "BLOCKED"
-            log_query(domain, client_ip, status)
+        # Check Blocklist
+        if self.blocklist_manager.is_blocked(qname, client_ip):
+            reply = request.reply()
+            # reply.header.rcode = getattr(RCODE, 'NXDOMAIN')
+            transport.sendto(reply.pack(), addr)
+            log_query(qname, client_ip, "BLOCKED")
             return
 
-        status = "ALLOWED"
-        log_query(domain, client_ip, status)
+        log_query(qname, client_ip, "ALLOWED")
 
+        # Forward to Upstream
         try:
-            # await self.resolver.query(domain, 'A')
-            pass
+            # Note: real implementation would handle non-A types and proper forwarding
+            # Here we use aiodns for simplicity in the blueprint
+            if qtype == 'A':
+                result = await self.resolver.query(qname, 'A')
+                reply = request.reply()
+                for r in result:
+                    reply.add_answer(RR(qname, QTYPE.A, rdata=A(r.host), ttl=r.ttl))
+                transport.sendto(reply.pack(), addr)
         except Exception as e:
-            print(f"Error resolving {domain}: {e}")
+            print(f"Error resolving {qname}: {e}")
+            # Send back original or error
+            transport.sendto(data, addr)
 
     async def start(self):
         init_db()

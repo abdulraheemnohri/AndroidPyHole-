@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body>
+<body class="dark-mode">
     <div class="container">
         <h1>CLIENTS</h1>
         <div class="card">
@@ -26,8 +26,11 @@
                         <tr>
                             <td>{{ client.client }}</td>
                             <td>{{ client.count }}</td>
-                            <td><span id="tag-{{ client.client }}">{{ client.group_name or 'Default' }}</span></td>
-                            <td><button onclick="changeGroup('{{ client.client }}')">Edit Tag</button></td>
+                            <td>{{ client.group_name or 'Default' }}</td>
+                            <td>
+                                <button onclick="toggleBlock('{{ client.client }}')">Block/Unblock</button>
+                                <button onclick="changeGroup('{{ client.client }}')">Tag</button>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -40,12 +43,12 @@
         </div>
     </div>
     <script>
+        async function toggleBlock(client) {
+            alert("Toggled blocking for " + client + " (Blueprint mockup)");
+        }
         async function changeGroup(client) {
-            const newGroup = prompt("Enter new tag/group for " + client + ":");
-            if (newGroup !== null) {
-                // Update via API (not implemented in dashboard.py yet but mocked here)
-                alert("Assigned " + client + " to group: " + newGroup);
-            }
+            const newGroup = prompt("Enter tag for " + client + ":");
+            if (newGroup) alert("Tagged " + client + " as " + newGroup);
         }
     </script>
 </body>
