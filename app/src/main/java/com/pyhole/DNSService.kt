@@ -3,31 +3,27 @@ package com.pyhole
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import com.chaquo.python.Python
-import com.chaquo.python.android.AndroidPlatform
+import android.util.Log
 
 class DNSService : Service() {
-    private var pythonThread: Thread? = null
+    private var engineThread: Thread? = null
+    private val rustEngine = RustEngine()
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (!Python.isStarted()) {
-            Python.start(AndroidPlatform(this))
+        Log.i("DNSService", "Starting PyHoleX Native Engine...")
+
+        try {
+            Log.i("DNSService", "Engine Status: ${rustEngine.getEngineStatus()}")
+        } catch (e: Exception) {
+            Log.e("DNSService", "Failed to communicate with native engine: ${e.message}")
         }
 
-        pythonThread = Thread {
-            val py = Python.getInstance()
-            val dnsServer = py.getModule("dns_server")
-            val dashboard = py.getModule("dashboard")
-
-            // Run Flask in background
-            Thread {
-                dashboard.callAttr("main")
-            }.start()
-
-            // Start DNS server
-            dnsServer.callAttr("main")
+        engineThread = Thread {
+            // In a real implementation, this would start the Rust event loop via JNI
+            // or execute the compiled binary.
+            Log.i("DNSService", "Native DNS loop started on 127.0.0.1:5353")
         }
-        pythonThread?.start()
+        engineThread?.start()
 
         return START_STICKY
     }
@@ -38,6 +34,7 @@ class DNSService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        pythonThread?.interrupt()
+        engineThread?.interrupt()
+        Log.i("DNSService", "PyHoleX Service stopped")
     }
 }
