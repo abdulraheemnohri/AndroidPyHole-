@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AndroidPyHole Network</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <h1>NETWORK DISCOVERY</h1>
+        <div class="card">
+            <h3>Active Devices</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>MAC Address</th>
+                        <th>Hostname</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in devices %}
+                        <tr>
+                            <td>{{ device.ip }}</td>
+                            <td>{{ device.mac }}</td>
+                            <td>{{ device.name }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/logs">Logs</a>
+            <a href="/settings">Settings</a>
+        </div>
+    </div>
+</body>
+</html>

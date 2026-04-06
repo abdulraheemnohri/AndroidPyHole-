@@ -13,6 +13,10 @@ mkdir -p $ASSETS_DIR
 cp python/*.py $ASSETS_DIR/
 
 # Copy gui files to assets (assuming web dashboard is served from here)
-cp -r gui $ASSETS_DIR/
+# Use -R for recursive copy of gui directory
+cp -R gui/static $ASSETS_DIR/
+cp -R gui/templates $ASSETS_DIR/
+# Copy individual files if any in gui root
+cp gui/package.json $ASSETS_DIR/ 2>/dev/null || true
 
 echo "Python environment initialized successfully."

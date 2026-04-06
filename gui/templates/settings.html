@@ -67,6 +67,19 @@
             </div>
         </div>
 
+        <div class="card">
+            <h3>Regex Filters</h3>
+            <ul id="regex-list">
+                {% for pattern in config.regex_blocked %}
+                    <li><code>{{ pattern }}</code> <button class="btn-remove" onclick="removeRegex('{{ pattern }}')">×</button></li>
+                {% endfor %}
+            </ul>
+            <div class="input-group">
+                <input type="text" id="new-regex" placeholder="^adserver.*">
+                <button onclick="addRegex()">Add</button>
+            </div>
+        </div>
+
         <div class="nav-links">
             <a href="/">Dashboard</a>
             <a href="/logs">Logs</a>
@@ -118,6 +131,13 @@
             if (domain && ip) { config.local_dns[domain] = ip; saveConfig(); }
         }
         function removeLocalDNS(domain) { delete config.local_dns[domain]; saveConfig(); }
+
+        function addRegex() {
+            const pattern = document.getElementById('new-regex').value;
+            if (pattern) { config.regex_blocked.push(pattern); saveConfig(); }
+        }
+        function removeRegex(pattern) { config.regex_blocked = config.regex_blocked.filter(p => p !== pattern); saveConfig(); }
+
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
             localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
