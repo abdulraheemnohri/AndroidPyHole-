@@ -1,0 +1,8 @@
+{
+    "blocklists": [
+        "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
+        "https://easylist.to/easylist/easylist.txt"
+    ],
+    "custom_blocked": [],
+    "custom_allowed": []
+}
