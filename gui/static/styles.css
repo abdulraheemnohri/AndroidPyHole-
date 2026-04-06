@@ -7,6 +7,7 @@
     --text-primary: #e5e2e1;
     --text-secondary: #becab9;
     --accent-color: #4caf50;
+    --error-color: #ffb4ab;
 }
 
 body {
@@ -23,6 +24,7 @@ body {
     background: var(--surface-color);
     padding: 30px;
     border-radius: 16px;
+    min-height: 80vh;
 }
 
 h1 {
@@ -31,6 +33,19 @@ h1 {
     margin-bottom: 30px;
     color: var(--primary-color);
     text-align: center;
+}
+
+.card {
+    background: var(--card-color);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.card h3 {
+    margin-top: 0;
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--text-secondary);
 }
 
 .stats {
@@ -63,33 +78,70 @@ h1 {
     color: var(--text-primary);
 }
 
-.top-domains {
-    margin-top: 40px;
-}
-
-.top-domains h3 {
-    font-family: 'Space Grotesk', sans-serif;
-    margin-bottom: 20px;
-    font-size: 1.5rem;
-}
-
 ul {
     list-style: none;
     padding: 0;
 }
 
 li {
-    background: var(--card-color);
+    background: var(--surface-color);
     margin-bottom: 10px;
     padding: 15px;
     border-radius: 8px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
-canvas {
-    background: var(--card-color);
-    border-radius: 12px;
-    padding: 20px;
+button {
+    background-color: var(--primary-color);
+    color: #131313;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+input[type="text"] {
+    background: var(--bg-color);
+    border: 1px solid var(--card-color);
+    color: var(--text-primary);
+    padding: 10px;
+    border-radius: 6px;
+    width: 70%;
+}
+
+select {
+    background: var(--bg-color);
+    color: var(--text-primary);
+    padding: 10px;
+    border-radius: 6px;
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid var(--surface-color);
+}
+
+.nav-links {
     margin-top: 30px;
+    text-align: center;
+}
+
+.nav-links a {
+    color: var(--primary-color);
+    text-decoration: none;
+    margin: 0 10px;
 }
