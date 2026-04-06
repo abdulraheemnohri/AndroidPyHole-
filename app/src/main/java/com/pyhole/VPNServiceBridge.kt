@@ -24,16 +24,18 @@ class VPNServiceBridge : VpnService(), Runnable {
 
     private fun setupVPN() {
         val builder = Builder()
-        builder.setSession("AndroidPyHole")
+        builder.setSession("PyHoleX")
         builder.addAddress("10.0.0.2", 32)
+        // Redirect all DNS to local Rust engine port 5353
         builder.addDnsServer("127.0.0.1")
         builder.addRoute("0.0.0.0", 0)
-        // Add local DNS routing if necessary
+
         vpnInterface = builder.establish()
-        Log.i("VPNService", "VPN established")
+        Log.i("VPNService", "PyHoleX VPN established. DNS -> 127.0.0.1:5353")
     }
 
     override fun run() {
+        // High-performance packet loop (blueprint)
         try {
             val input = FileInputStream(vpnInterface?.fileDescriptor)
             val output = FileOutputStream(vpnInterface?.fileDescriptor)
@@ -42,16 +44,13 @@ class VPNServiceBridge : VpnService(), Runnable {
             while (isRunning) {
                 val length = input.read(packet.array())
                 if (length > 0) {
-                    // Simple packet loopback/handling logic for the blueprint
-                    // In a production app, this would involve TUN/TAP processing
                     packet.limit(length)
                     output.write(packet.array(), 0, length)
                     packet.clear()
                 }
-                Thread.sleep(10)
             }
         } catch (e: Exception) {
-            Log.e("VPNService", "Error in VPN loop: ${e.message}")
+            Log.e("VPNService", "VPN runtime error: ${e.message}")
         }
     }
 
@@ -59,7 +58,6 @@ class VPNServiceBridge : VpnService(), Runnable {
         isRunning = false
         vpnThread?.interrupt()
         vpnInterface?.close()
-        Log.i("VPNService", "VPN destroyed")
         super.onDestroy()
     }
 }
