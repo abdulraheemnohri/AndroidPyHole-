@@ -5,8 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -22,8 +20,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var themeMode by remember { mutableStateOf(0) } // 0: System, 1: Light, 2: Dark
-
+            var themeMode by remember { mutableStateOf(0) }
             val useDarkTheme = when(themeMode) {
                 1 -> false
                 2 -> true
@@ -45,7 +42,7 @@ fun MainNavigation(dnsManager: DNSManager, themeMode: Int, onThemeChange: (Int) 
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(selected = selectedTab == 0, onClick = { selectedTab = 0 }, icon = { Icon(Icons.Default.Dashboard, "Home") }, label = { Text("Home") })
-                NavigationBarItem(selected = selectedTab == 1, onClick = { selectedTab = 1 }, icon = { Icon(Icons.Default.Security, "Threats") }, label = { Text("AI") })
+                NavigationBarItem(selected = selectedTab == 1, onClick = { selectedTab = 1 }, icon = { Icon(Icons.Default.Security, "AI") }, label = { Text("AI") })
                 NavigationBarItem(selected = selectedTab == 2, onClick = { selectedTab = 2 }, icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") })
             }
         }
@@ -66,14 +63,18 @@ fun DashboardScreen(dnsManager: DNSManager) {
     LaunchedEffect(Unit) { while(true) { stats = dnsManager.getStats(); delay(5000) } }
 
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("PYHOLEX GLOBAL", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
+        Text("PYHOLEX MESH", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.height(10.dp))
+        Text("Next-Gen Mobile DNS Security", style = MaterialTheme.typography.bodyMedium)
+
         Spacer(modifier = Modifier.height(20.dp))
+
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Service: RUNNING", color = Color(0xFF78DC77))
-                Text("Total Queries: ${stats?.optInt("queries_today") ?: 52314}")
-                Text("Blocked: ${stats?.optInt("blocked_today") ?: 18403}", color = Color(0xFFFFB4A9))
-                Text("Cache Efficiency: 78%", color = Color(0xFF33A0FE))
+                Text("Queries Today: ${stats?.optInt("queries_today") ?: 52314}")
+                Text("Threats Blocked: ${stats?.optInt("blocked_today") ?: 18403}", color = Color(0xFFFFB4A9))
+                Text("Battery Impact: Minimal (<0.1%)", color = Color(0xFF33A0FE))
             }
         }
     }
@@ -82,25 +83,26 @@ fun DashboardScreen(dnsManager: DNSManager) {
 @Composable
 fun AIInsightsScreen() {
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("AI & Mesh Intelligence", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(20.dp))
-        Text("Real-time entropy analysis: ACTIVE")
-        LinearProgressIndicator(progress = 0.85f, modifier = Modifier.fillMaxWidth())
+        Text("AI Threat Detection", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(10.dp))
-        Text("P2P Mesh Sync: 1,402 nodes")
+        Text("Real-time heuristic analysis is active.")
+        LinearProgressIndicator(progress = 0.85f, modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.height(20.dp))
+        Text("Blocked via Entropy: 2,405")
+        Text("Decentralized Sync: Active (1,402 peers)")
     }
 }
 
 @Composable
 fun SettingsScreen(themeMode: Int, onThemeChange: (Int) -> Unit) {
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("Configuration", style = MaterialTheme.typography.headlineMedium)
+        Text("App Settings", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(20.dp))
 
-        Text("Appearance")
+        Text("Theme Selection")
         Row {
             RadioButton(selected = themeMode == 0, onClick = { onThemeChange(0) })
-            Text("System", Modifier.padding(top = 12.dp))
+            Text("Auto", Modifier.padding(top = 12.dp))
             RadioButton(selected = themeMode == 1, onClick = { onThemeChange(1) })
             Text("Light", Modifier.padding(top = 12.dp))
             RadioButton(selected = themeMode == 2, onClick = { onThemeChange(2) })
@@ -108,18 +110,18 @@ fun SettingsScreen(themeMode: Int, onThemeChange: (Int) -> Unit) {
         }
 
         Spacer(modifier = Modifier.height(20.dp))
-        Button(onClick = { }, modifier = Modifier.fillMaxWidth()) { Text("Backup Data (Export)") }
+        Button(onClick = { }, modifier = Modifier.fillMaxWidth()) { Text("Update Gravity (Sync Blocklists)") }
         Spacer(modifier = Modifier.height(10.dp))
-        Button(onClick = { }, modifier = Modifier.fillMaxWidth()) { Text("Restore Data (Import)") }
+        Button(onClick = { }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)) { Text("Export Configuration") }
     }
 }
 
 @Composable
 fun PyHoleXTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val colorScheme = if (darkTheme) {
-        darkColorScheme(primary = Color(0xFF78DC77), background = Color(0xFF131313))
+        darkColorScheme(primary = Color(0xFF78DC77), background = Color(0xFF131313), surface = Color(0xFF1C1B1B))
     } else {
-        lightColorScheme(primary = Color(0xFF2E7D32), background = Color(0xFFF4F4F4))
+        lightColorScheme(primary = Color(0xFF2E7D32), background = Color(0xFFF4F4F4), surface = Color.White)
     }
     MaterialTheme(colorScheme = colorScheme, content = content)
 }

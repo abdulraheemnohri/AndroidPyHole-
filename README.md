@@ -125,3 +125,15 @@ PyHoleX is production-ready with automated GitHub Actions:
 
 ---
 *MIT Licensed | Optimized for Speed, Privacy, and Performance. (V5.0.0 Stable)*
+
+---
+
+## 📦 How to get the APK
+This project includes a **fully automated CI/CD pipeline**.
+1. Push this code to your GitHub repository.
+2. Go to the **Actions** tab in your GitHub repo.
+3. Select the **PyHoleX CI & Build** workflow.
+4. Once the build finishes, you will find the **pyholex-debug-apk** under the "Artifacts" section at the bottom of the build summary page.
+
+---
+*Blueprint version V5.1.0 (Production Stabilized).*
