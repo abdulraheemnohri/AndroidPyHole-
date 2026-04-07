@@ -1,25 +1,8 @@
-# Rust
-rust-dns-engine/target/
-rust-dns-engine/Cargo.lock
-*.rs.bk
-
-# Android
 .gradle/
-build/
-app/build/
-local.properties
-.idea/
-*.iml
+/build/
+/app/build/
+/app/.cxx/
+/rust-dns-engine/target/
 *.apk
-
-# Logs & Storage
-storage/logs/*.db
-storage/blocklists/*.txt
-.gradle/
-build/
-app/build/
-app/.cxx/
-rust-dns-engine/target/
-*.apk
-local.properties
+/local.properties
 .DS_Store
