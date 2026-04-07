@@ -1,45 +1,44 @@
-# PyHoleX: The Next-Gen Android DNS Firewall (Ultimate Edition)
+# PyHoleX: Global Mesh Edition (Ultimate High-Performance DNS)
 
-PyHoleX is the definitive high-performance Pi-hole equivalent for Android, re-engineered with a native **Rust DNS Engine** and a modern **Jetpack Compose** interface. It offers enterprise-grade network security, decentralized intelligence, and AI-powered threat prevention in a single mobile application.
+PyHoleX is an enterprise-grade, decentralized DNS firewall for Android. By combining a native **Rust Engine**, **AI Heuristics**, and a **Global Mesh Intelligence** network, PyHoleX provides the most advanced privacy and security experience available for mobile devices.
 
-## 🚀 Key Advantages (Next-Gen)
+## 🚀 Key Advantages (Mesh Edition)
 
-- **Pure Rust Performance**: 50k+ QPS with sub-25MB memory footprint. Minimal battery impact.
-- **AI Heuristic Analysis**: Real-time domain entropy and keyword analysis to detect zero-day phishing and malware.
-- **Decentralized P2P Intelligence**: Anonymous threat-sharing network (P2P blueprint) for global community-powered protection.
-- **App-Level Granularity**: Identify and control DNS traffic on a per-app basis.
-- **Native Material 3 UI**: Fully native Android experience using modern declarative UI.
+- **Pure Rust Engine**: Benchmark-breaking 50k+ QPS with a minimal system footprint.
+- **Decentralized Mesh Intelligence**: Anonymous, peer-to-peer threat sharing (Gossip Protocol) ensures you are protected by the community in real-time.
+- **AI-Powered Prevention**: Real-time entropy and heuristic analysis to block 0-day malware and phishing.
+- **Mobile Energy Optimization**: Tracks "Energy Saved" by preventing high-weight trackers and ad payloads from consuming battery and data.
+- **DNS-over-HTTPS (DoH)**: Full blueprint for encrypted inbound and outbound DNS traffic.
+- **Native Material 3 UI**: Modern, responsive Jetpack Compose interface with deep system integration.
 
 ## 🏗️ Architecture
 
-- **Engine (Rust)**: Asynchronous packet handling (`tokio`), categorization engine, and SQLite logging.
-- **Frontend (Kotlin)**: Jetpack Compose UI, Foreground Service, and VPNService orchestration.
-- **Bridge**: JNI interface for engine control and secure internal API for data visualization.
+- **Core (Rust)**: High-concurrency `tokio` runtime handling resolution, mesh sync, and AI analysis.
+- **Frontend (Kotlin)**: Jetpack Compose mobile dashboard, battery-optimized foreground services, and VPNService orchestration.
+- **P2P Layer**: Decentralized threat synchronization using a modern gossip protocol blueprint.
 
 ## 🛡️ Feature Stack
 
-- **Ad & Tracker Blocking**: Instantaneous O(1) lookups against massive datasets.
-- **Parental Controls**: Domain categorization for easy filtering of adult or social media content.
-- **Security Audit**: High-resolution query logging with detailed block reasoning.
-- **Network Scan**: Built-in discovery of devices on the local network.
+- **Global Category Filters**: Effortlessly toggle blocking for Ads, Social Media, Adult Content, and Malware.
+- **Sustainability Dashboard**: Visualize your contribution to data and battery savings.
+- **Granular App Control**: Monitor and restrict DNS queries on a per-application basis.
+- **Audit Logs**: Deep-packet inspection logs with cryptographic reasoning for every block.
 
-## 🛠️ Getting Started
+## 🛠️ Build & Development
 
-### 1. Build Native Core
+### 1. Build Rust Core
 ```bash
 cd rust-dns-engine
 cargo build --release
 ```
 
-### 2. Android Studio Deployment
-- Open project in **Android Studio**.
-- Ensure **NDK** and **Rust** toolchains are installed.
-- Build and deploy the **app** module.
+### 2. Android Deployment
+- Open in **Android Studio**.
+- Ensure **NDK** and **Rust** toolchains are active.
+- Deploy the **app** module to your Android device.
 
 ## 📦 CI/CD
-- Automated Rust unit testing.
-- Cross-platform Android APK building (aarch64, armv7).
-- Blueprint for NPM/PyPI/Maven publishing.
+Fully automated GitHub Actions for Rust testing, multi-arch APK building (aarch64, armv7), and blueprint-based package publishing.
 
 ---
-*MIT Licensed | Secure. Private. Fast.*
+*MIT Licensed | Secure. Decentralized. Sustainable.*
