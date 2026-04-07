@@ -1,3 +1,0 @@
-/app/app/.cxx/Debug/614r2r3c/armeabi-v7a/CMakeFiles/pyhole_native.dir
-/app/app/.cxx/Debug/614r2r3c/armeabi-v7a/CMakeFiles/edit_cache.dir
-/app/app/.cxx/Debug/614r2r3c/armeabi-v7a/CMakeFiles/rebuild_cache.dir
