@@ -1,10 +1,12 @@
 <resources>
-    <!-- Use a base AppCompat theme to satisfy all dependencies -->
+
     <style name="Theme.PyHoleX" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_bg</item>
         <item name="colorPrimary">#78DC77</item>
         <item name="android:statusBarColor">#131313</item>
     </style>
 
-    <!-- Explicit AppCompat alias -->
+    <!-- Compatibility alias for AppCompat -->
     <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.PyHoleX" />
+
 </resources>
