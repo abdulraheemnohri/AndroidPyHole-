@@ -1,5 +1,6 @@
 mod classifier;
 mod p2p;
+mod network_scanner;
 mod dns_server;
 mod blocklist;
 mod logger;
