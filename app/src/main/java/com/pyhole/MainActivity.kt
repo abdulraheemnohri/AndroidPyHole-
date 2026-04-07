@@ -33,18 +33,18 @@ fun MainNavigation() {
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(selected = selectedTab == 0, onClick = { selectedTab = 0 }, icon = { Icon(Icons.Default.Dashboard, "Home") }, label = { Text("Home") })
-                NavigationBarItem(selected = selectedTab == 1, onClick = { selectedTab = 1 }, icon = { Icon(Icons.Default.Apps, "Apps") }, label = { Text("Apps") })
-                NavigationBarItem(selected = selectedTab == 2, onClick = { selectedTab = 2 }, icon = { Icon(Icons.Default.Security, "AI") }, label = { Text("AI") })
-                NavigationBarItem(selected = selectedTab == 3, onClick = { selectedTab = 3 }, icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") })
+                NavigationBarItem(selected = selectedTab == 1, onClick = { selectedTab = 1 }, icon = { Icon(Icons.Default.BatteryChargingFull, "Stats") }, label = { Text("Savings") })
+                NavigationBarItem(selected = selectedTab == 2, onClick = { selectedTab = 2 }, icon = { Icon(Icons.Default.Security, "AI") }, label = { Text("Threats") })
+                NavigationBarItem(selected = selectedTab == 3, onClick = { selectedTab = 3 }, icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Mesh") })
             }
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
                 0 -> DashboardScreen()
-                1 -> AppControlScreen()
+                1 -> SavingsScreen()
                 2 -> AIInsightsScreen()
-                3 -> SettingsScreen()
+                3 -> MeshSettingsScreen()
             }
         }
     }
@@ -53,30 +53,32 @@ fun MainNavigation() {
 @Composable
 fun DashboardScreen() {
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("PYHOLEX GLOBAL", style = MaterialTheme.typography.headlineLarge, color = Color(0xFF78DC77))
+        Text("PYHOLEX MESH", style = MaterialTheme.typography.headlineLarge, color = Color(0xFF78DC77))
         Spacer(modifier = Modifier.height(20.dp))
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Status: RUNNING", color = Color(0xFF78DC77))
-                Text("Total Queries: 52,314")
-                Text("Threats Blocked: 18,403", color = Color(0xFFFFB4A9))
-                Text("P2P Nodes Sync: ACTIVE", color = Color(0xFF33A0FE))
+                Text("Queries Today: 52,314")
+                Text("Mesh Peers: 1,402 Active", color = Color(0xFF33A0FE))
             }
         }
     }
 }
 
 @Composable
-fun AppControlScreen() {
-    val apps = listOf("Chrome", "TikTok", "Instagram", "YouTube")
-    LazyColumn(modifier = Modifier.padding(16.dp)) {
-        item { Text("App-Level DNS Control", style = MaterialTheme.typography.headlineMedium) }
-        items(apps) { app ->
-            ListItem(
-                headlineContent = { Text(app) },
-                trailingContent = { Switch(checked = true, onCheckedChange = {}) }
-            )
+fun SavingsScreen() {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Mobile Optimization", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(20.dp))
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1B5E20))) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Estimated Energy Saved", style = MaterialTheme.typography.titleMedium)
+                Text("154.2 mAh", style = MaterialTheme.typography.displayMedium)
+                Text("Equivalent to ~24 mins extra runtime", style = MaterialTheme.typography.bodySmall)
+            }
         }
+        Spacer(modifier = Modifier.height(10.dp))
+        Text("Data Saved: 1.4 GB (Estimated ad payload prevention)")
     }
 }
 
@@ -84,17 +86,20 @@ fun AppControlScreen() {
 fun AIInsightsScreen() {
     Column(modifier = Modifier.padding(16.dp)) {
         Text("AI & Heuristics", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(10.dp))
-        Text("Real-time entropy analysis active.")
-        LinearProgressIndicator(progress = 0.7f, modifier = Modifier.fillMaxWidth())
+        Text("Total detections: 2,405")
+        LinearProgressIndicator(progress = 0.85f, modifier = Modifier.fillMaxWidth())
     }
 }
 
 @Composable
-fun SettingsScreen() {
+fun MeshSettingsScreen() {
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("Configuration", style = MaterialTheme.typography.headlineMedium)
-        Button(onClick = { }, modifier = Modifier.fillMaxWidth()) { Text("Update Gravity") }
+        Text("Mesh Configuration", style = MaterialTheme.typography.headlineMedium)
+        ListItem(
+            headlineContent = { Text("Participate in Peer Intelligence") },
+            supportingContent = { Text("Share anonymous threat data with the mesh network.") },
+            trailingContent = { Switch(checked = true, onCheckedChange = {}) }
+        )
     }
 }
 
