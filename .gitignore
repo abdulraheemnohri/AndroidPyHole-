@@ -15,3 +15,11 @@ local.properties
 # Logs & Storage
 storage/logs/*.db
 storage/blocklists/*.txt
+.gradle/
+build/
+app/build/
+app/.cxx/
+rust-dns-engine/target/
+*.apk
+local.properties
+.DS_Store

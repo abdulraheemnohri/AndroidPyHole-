@@ -5,7 +5,12 @@ class RustEngine {
 
     companion object {
         init {
-            System.loadLibrary("pyhole_rust")
+            try {
+                System.loadLibrary("pyhole_rust")
+            } catch (e: UnsatisfiedLinkError) {
+                // Fallback or log if needed, though for now we want to know if it fails
+                e.printStackTrace()
+            }
         }
     }
 }

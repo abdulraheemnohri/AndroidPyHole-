@@ -5,7 +5,11 @@ class NativeEngine {
 
     companion object {
         init {
-            System.loadLibrary("pyhole_native")
+            try {
+                System.loadLibrary("pyhole_native")
+            } catch (e: UnsatisfiedLinkError) {
+                e.printStackTrace()
+            }
         }
     }
 }
