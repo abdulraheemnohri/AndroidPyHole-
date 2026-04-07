@@ -11,21 +11,19 @@ pub async fn run(blocklist: Arc<Mutex<Blocklist>>) -> Result<(), Box<dyn std::er
         let (len, addr) = socket.recv_from(&mut buf).await?;
         let _packet = &buf[..len];
 
-        // Mock domain extraction
         let domain = "example.com";
         let client_ip = addr.ip().to_string();
 
-        let is_blocked = {
+        let (is_blocked, reason) = {
             let bl = blocklist.lock().unwrap();
-            bl.is_blocked(domain)
+            bl.is_blocked(domain, None) // Providing None for app_id in blueprint
         };
 
         if is_blocked {
-            logger::log_query(domain, &client_ip, true)?;
-            // Send Blocked response
+            let _ = logger::log_query(domain, &client_ip, true);
+            println!("Blocked {}: {:?}", domain, reason);
         } else {
-            logger::log_query(domain, &client_ip, false)?;
-            // Forward to upstream DNS (Cloudflare/Google)
+            let _ = logger::log_query(domain, &client_ip, false);
         }
     }
 }
