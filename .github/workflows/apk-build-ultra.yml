@@ -1,0 +1,61 @@
+name: Ultra Stable Android Rust CI
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-rust-core:
+    name: Build Rust Core
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    strategy:
+      matrix:
+        target: [aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+      - name: Build Core
+        run: |
+          cd rust-dns-engine
+          cargo build --release --target ${{ matrix.target }}
+      - name: Upload Core Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-core-${{ matrix.target }}
+          path: rust-dns-engine/target/${{ matrix.target }}/release/*.so
+
+  build-android-apk:
+    name: Build Android APK
+    needs: build-rust-core
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+      - name: Download Rust Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: app/src/main/jniLibs
+      - name: Build APK
+        run: ./gradlew assembleDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyholex-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
