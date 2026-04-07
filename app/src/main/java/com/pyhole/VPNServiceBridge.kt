@@ -6,65 +6,55 @@ import android.util.Log
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
-import android.content.pm.PackageManager
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
-class VPNServiceBridge : VpnService(), Runnable {
+class VPNServiceBridge : VpnService() {
     private var vpnInterface: ParcelFileDescriptor? = null
-    private var vpnThread: Thread? = null
-    private var isRunning = false
+    private val executorService: ExecutorService = Executors.newSingleThreadExecutor()
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (!isRunning) {
-            setupVPN()
-            isRunning = true
-            vpnThread = Thread(this, "VPNThread")
-            vpnThread?.start()
-        }
+        setupVPN()
+        executorService.submit { runVpnLoop() }
         return START_STICKY
     }
 
     private fun setupVPN() {
         val builder = Builder()
-        builder.setSession("PyHoleX")
+        builder.setSession("PyHoleX Global")
         builder.addAddress("10.0.0.2", 32)
         builder.addDnsServer("127.0.0.1")
         builder.addRoute("0.0.0.0", 0)
-
-        // Example: Exclude PyHoleX itself from the VPN to avoid loops
-        try {
-            builder.addDisallowedApplication(packageName)
-        } catch (e: PackageManager.NameNotFoundException) {
-            Log.e("VPN", "Package not found", e)
-        }
-
+        builder.setBlocking(true)
         vpnInterface = builder.establish()
+        Log.i("VPNService", "VPN established successfully")
     }
 
-    override fun run() {
+    private fun runVpnLoop() {
         try {
-            val input = FileInputStream(vpnInterface?.fileDescriptor)
-            val output = FileOutputStream(vpnInterface?.fileDescriptor)
+            val fd = vpnInterface?.fileDescriptor ?: return
+            val input = FileInputStream(fd)
+            val output = FileOutputStream(fd)
             val packet = ByteBuffer.allocate(32767)
 
-            while (isRunning) {
+            while (!Thread.interrupted()) {
                 val length = input.read(packet.array())
                 if (length > 0) {
-                    // Logic to identify source app (simplified blueprint)
-                    // On Android, we can track UIDs if we parse the IP headers manually
-                    // For the blueprint, we assume app identification is handled via Netlink or UID tracking
+                    // This is where low-level IP packet handling occurs
+                    // DNS packets (UDP port 53) are redirected by the OS to our DNS server
+                    // We simply pass through non-DNS traffic in this blueprint
                     packet.limit(length)
                     output.write(packet.array(), 0, length)
                     packet.clear()
                 }
             }
         } catch (e: Exception) {
-            Log.e("VPNService", "Error: ${e.message}")
+            Log.e("VPNService", "Loop error: ${e.message}")
         }
     }
 
     override fun onDestroy() {
-        isRunning = false
-        vpnThread?.interrupt()
+        executorService.shutdownNow()
         vpnInterface?.close()
         super.onDestroy()
     }

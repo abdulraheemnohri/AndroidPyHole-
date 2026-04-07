@@ -1,6 +1,9 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Theme.PyHoleX" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">#78DC77</item>
         <item name="android:statusBarColor">#131313</item>
     </style>
+
+    <!-- Compatibility alias for AppCompat libraries -->
+    <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.PyHoleX" />
 </resources>
