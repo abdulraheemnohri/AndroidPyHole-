@@ -2,15 +2,15 @@ apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
-    namespace "com.pyhole"
+    namespace "com.androidpyhole"
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.pyhole"
+        applicationId "com.androidpyhole"
         minSdk 24
         targetSdk 34
         versionCode 1
-        versionName "5.1.4"
+        versionName "5.2.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary true }

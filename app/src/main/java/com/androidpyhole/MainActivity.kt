@@ -1,4 +1,4 @@
-package com.pyhole
+package com.androidpyhole
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

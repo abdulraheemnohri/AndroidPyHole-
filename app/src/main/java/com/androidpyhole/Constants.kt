@@ -1,4 +1,4 @@
-package com.pyhole
+package com.androidpyhole
 
 object Constants {
     const val RUST_ENGINE_PORT = 5353

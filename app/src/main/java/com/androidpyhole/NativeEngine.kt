@@ -1,4 +1,4 @@
-package com.pyhole
+package com.androidpyhole
 
 class NativeEngine {
     external fun stringFromJNI(): String
