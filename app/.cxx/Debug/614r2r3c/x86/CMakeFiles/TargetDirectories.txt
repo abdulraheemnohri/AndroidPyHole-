@@ -1,0 +1,3 @@
+/app/app/.cxx/Debug/614r2r3c/x86/CMakeFiles/pyhole_native.dir
+/app/app/.cxx/Debug/614r2r3c/x86/CMakeFiles/edit_cache.dir
+/app/app/.cxx/Debug/614r2r3c/x86/CMakeFiles/rebuild_cache.dir

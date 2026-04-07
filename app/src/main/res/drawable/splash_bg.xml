@@ -11,6 +11,6 @@
     <!-- centered logo -->
     <item
         android:gravity="center"
-        android:drawable="@mipmap/ic_launcher"/>
+        android:drawable="@drawable/ic_pyhole_logo"/>
 
 </layer-list>

@@ -3,6 +3,10 @@ name = "pyholex-engine"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "pyhole_rust"
+crate-type = ["cdylib"]
+
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
 trust-dns-server = "0.22"
@@ -11,3 +15,4 @@ serde_json = "1.0"
 rusqlite = "0.28"
 warp = "0.3" # Fast API server
 log = "0.4"
+jni = "0.21"
