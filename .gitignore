@@ -1,0 +1,17 @@
+# Rust
+rust-dns-engine/target/
+rust-dns-engine/Cargo.lock
+*.rs.bk
+
+# Android
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+*.apk
+
+# Logs & Storage
+storage/logs/*.db
+storage/blocklists/*.txt
