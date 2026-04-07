@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="#131313" />
+
+    <!-- background -->
     <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@mipmap/ic_launcher" />
+        <shape android:shape="rectangle">
+            <solid android:color="#131313"/>
+        </shape>
     </item>
+
+    <!-- centered logo -->
+    <item
+        android:gravity="center"
+        android:drawable="@mipmap/ic_launcher"/>
+
 </layer-list>
