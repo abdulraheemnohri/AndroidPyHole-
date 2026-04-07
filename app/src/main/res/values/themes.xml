@@ -1,12 +1,12 @@
 <resources>
 
-    <style name="Theme.PyHoleX" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Theme.AndroidPyHole" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_bg</item>
         <item name="colorPrimary">@color/primary_green</item>
         <item name="android:statusBarColor">@color/pyholex_bg</item>
     </style>
 
     <!-- Compatibility alias for AppCompat -->
-    <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.PyHoleX" />
+    <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.AndroidPyHole" />
 
 </resources>

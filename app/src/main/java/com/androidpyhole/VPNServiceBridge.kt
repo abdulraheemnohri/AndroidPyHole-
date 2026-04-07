@@ -1,4 +1,4 @@
-package com.pyhole
+package com.androidpyhole
 
 import android.content.Intent
 import android.net.VpnService

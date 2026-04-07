@@ -1,4 +1,4 @@
-package com.pyhole
+package com.androidpyhole
 
 class RustEngine {
     external fun getEngineStatus(): String
