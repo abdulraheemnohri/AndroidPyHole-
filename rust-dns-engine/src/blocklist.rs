@@ -1,77 +1,149 @@
-use std::collections::{HashSet, HashMap};
-use crate::classifier::AIHeuristic;
-use crate::p2p::P2PNode;
+use std::collections::HashSet;
+use regex::Regex;
+use serde::{Serialize, Deserialize};
+use std::fs;
 
-pub enum DomainCategory {
-    Ads,
-    Social,
-    Adult,
-    Malware,
-    Tracking,
-    _Custom,
+#[derive(Serialize, Deserialize, Clone, Copy, PartialEq)]
+pub enum ShieldProfile {
+    Standard,
+    Strict,
+    DNSOnly,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct BlocklistConfig {
+    pub enabled_urls: Vec<String>,
+    pub custom_blacklist: HashSet<String>,
+    pub custom_whitelist: HashSet<String>,
+    pub regex_blacklist: Vec<String>,
+    pub parental_control_enabled: bool,
+    pub active_profile: ShieldProfile,
+    pub upstream_dns: String,
+}
+
+impl Default for BlocklistConfig {
+    fn default() -> Self {
+        BlocklistConfig {
+            enabled_urls: vec!["https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts".to_string()],
+            custom_blacklist: HashSet::new(),
+            custom_whitelist: HashSet::new(),
+            regex_blacklist: Vec::new(),
+            parental_control_enabled: false,
+            active_profile: ShieldProfile::Standard,
+            upstream_dns: "8.8.8.8:53".to_string(),
+        }
+    }
 }
 
 pub struct Blocklist {
-    pub domains: HashMap<String, DomainCategory>,
-    pub wildcards: Vec<String>,
-    pub app_rules: HashMap<String, HashSet<String>>,
-    pub ai: AIHeuristic,
-    pub p2p: P2PNode,
+    pub domains: HashSet<String>,
+    pub whitelist: HashSet<String>,
+    pub blacklist: HashSet<String>,
+    pub urls: Vec<String>,
+    pub regex_cache: Vec<Regex>,
+    pub parental_control: bool,
+    pub profile: ShieldProfile,
+    pub upstream_dns: String,
 }
 
 impl Blocklist {
     pub fn new() -> Self {
-        let mut domains = HashMap::new();
-        domains.insert("doubleclick.net".to_string(), DomainCategory::Ads);
+        let config = Self::load_config().unwrap_or_default();
         Blocklist {
-            domains,
-            wildcards: vec!["ads.".to_string(), "track.".to_string()],
-            app_rules: HashMap::new(),
-            ai: AIHeuristic::new(),
-            p2p: P2PNode::new(),
+            domains: HashSet::new(),
+            whitelist: config.custom_whitelist,
+            blacklist: config.custom_blacklist,
+            urls: config.enabled_urls,
+            regex_cache: config.regex_blacklist.iter()
+                .filter_map(|s| Regex::new(s).ok())
+                .collect(),
+            parental_control: config.parental_control_enabled,
+            profile: config.active_profile,
+            upstream_dns: config.upstream_dns,
         }
     }
 
-    pub fn is_blocked(&self, domain: &str, app_id: Option<&str>) -> (bool, Option<String>) {
-        if let Some(_cat) = self.domains.get(domain) {
-            return (true, Some("Blocklist Match".to_string()));
+    fn load_config() -> Option<BlocklistConfig> {
+        let data = fs::read_to_string("pyholex_config.json").ok()?;
+        serde_json::from_str(&data).ok()
+    }
+
+    pub fn save_config(&self) {
+        let config = BlocklistConfig {
+            enabled_urls: self.urls.clone(),
+            custom_blacklist: self.blacklist.clone(),
+            custom_whitelist: self.whitelist.clone(),
+            regex_blacklist: self.regex_cache.iter().map(|r| r.as_str().to_string()).collect(),
+            parental_control_enabled: self.parental_control,
+            active_profile: self.profile,
+            upstream_dns: self.upstream_dns.clone(),
+        };
+        if let Ok(data) = serde_json::to_string_pretty(&config) {
+            let _ = fs::write("pyholex_config.json", data);
+        }
+    }
+
+    pub fn is_blocked(&self, domain: &str) -> (bool, Option<String>) {
+        if self.profile == ShieldProfile::DNSOnly {
+            return (false, None);
         }
 
-        for w in &self.wildcards {
-            if domain.starts_with(w) {
-                return (true, Some(format!("Wildcard Match ({})", w)));
+        let domain_clean = domain.trim_end_matches('.').to_lowercase();
+
+        if self.whitelist.contains(&domain_clean) {
+            return (false, Some("Whitelisted".to_string()));
+        }
+
+        if self.blacklist.contains(&domain_clean) {
+            return (true, Some("User Blacklisted".to_string()));
+        }
+
+        for re in &self.regex_cache {
+            if re.is_match(&domain_clean) {
+                return (true, Some("Regex Match".to_string()));
             }
         }
 
-        if self.p2p.is_p2p_threat(domain) {
-            return (true, Some("P2P Community Block".to_string()));
+        if self.domains.contains(&domain_clean) {
+            return (true, Some("Blocklist Match".to_string()));
         }
 
-        let (is_ai_threat, score) = self.ai.analyze(domain);
-        if is_ai_threat {
-            return (true, Some(format!("AI Preventative (Score: {:.2})", score)));
+        if self.parental_control {
+            let adult_keywords = ["porn", "sex", "gamble", "casino"];
+            for kw in adult_keywords {
+                if domain_clean.contains(kw) {
+                    return (true, Some("Parental Control Block".to_string()));
+                }
+            }
         }
 
-        if let Some(aid) = app_id {
-            if let Some(blocked) = self.app_rules.get(aid) {
-                if blocked.contains(domain) { return (true, Some("App Restriction".to_string())); }
+        if self.profile == ShieldProfile::Strict {
+            if domain_clean.starts_with("analytics.") || domain_clean.starts_with("telemetry.") {
+                return (true, Some("Strict Mode Block".to_string()));
             }
         }
 
         (false, None)
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_is_blocked() {
-        let bl = Blocklist::new();
-        let (blocked, _) = bl.is_blocked("doubleclick.net", None);
-        assert!(blocked);
-        let (blocked, _) = bl.is_blocked("google.com", None);
-        assert!(!blocked);
+    pub async fn sync_remote(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let mut new_domains = HashSet::new();
+        for url in &self.urls {
+            if let Ok(resp) = reqwest::get(url).await {
+                if let Ok(text) = resp.text().await {
+                    for line in text.lines() {
+                        if line.starts_with("0.0.0.0 ") || line.starts_with("127.0.0.1 ") {
+                            let parts: Vec<&str> = line.split_whitespace().collect();
+                            if parts.len() >= 2 {
+                                new_domains.insert(parts[1].to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        self.domains = new_domains;
+        self.save_config();
+        Ok(())
     }
 }

@@ -1,26 +1,46 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
 package com.androidpyhole
 
+import android.content.Intent
+import android.net.VpnService
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
     private val dnsManager = DNSManager()
 
+    private val vpnPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            startVpn()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var themeMode by remember { mutableStateOf(0) }
+            var themeMode by remember { mutableIntStateOf(0) }
             val useDarkTheme = when(themeMode) {
                 1 -> false
                 2 -> true
@@ -28,91 +48,284 @@ class MainActivity : ComponentActivity() {
             }
 
             PyHoleXTheme(darkTheme = useDarkTheme) {
-                MainNavigation(dnsManager, themeMode) { themeMode = it }
+                MainNavigation(
+                    dnsManager,
+                    themeMode,
+                    onThemeChange = { themeMode = it },
+                    onToggleVpn = { toggleVpn() }
+                )
             }
         }
+    }
+
+    private fun toggleVpn() {
+        val intent = VpnService.prepare(this)
+        if (intent != null) {
+            vpnPermissionLauncher.launch(intent)
+        } else {
+            startVpn()
+        }
+    }
+
+    private fun startVpn() {
+        val startIntent = Intent(this, VPNServiceBridge::class.java).apply {
+            action = VPNServiceBridge.ACTION_START
+        }
+        startService(startIntent)
+        startService(Intent(this, DNSService::class.java))
     }
 }
 
 @Composable
-fun MainNavigation(dnsManager: DNSManager, themeMode: Int, onThemeChange: (Int) -> Unit) {
-    var selectedTab by remember { mutableStateOf(0) }
+fun MainNavigation(
+    dnsManager: DNSManager,
+    themeMode: Int,
+    onThemeChange: (Int) -> Unit,
+    onToggleVpn: () -> Unit
+) {
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
         bottomBar = {
             NavigationBar {
-                NavigationBarItem(selected = selectedTab == 0, onClick = { selectedTab = 0 }, icon = { Icon(Icons.Default.Dashboard, "Home") }, label = { Text("Home") })
-                NavigationBarItem(selected = selectedTab == 1, onClick = { selectedTab = 1 }, icon = { Icon(Icons.Default.Security, "AI") }, label = { Text("AI") })
-                NavigationBarItem(selected = selectedTab == 2, onClick = { selectedTab = 2 }, icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") })
+                NavigationBarItem(selected = selectedTab == 0, onClick = { selectedTab = 0 }, icon = { Icon(Icons.Default.Dashboard, "Dashboard") }, label = { Text("Home") })
+                NavigationBarItem(selected = selectedTab == 1, onClick = { selectedTab = 1 }, icon = { Icon(Icons.Default.List, "Logs") }, label = { Text("Traffic") })
+                NavigationBarItem(selected = selectedTab == 2, onClick = { selectedTab = 2 }, icon = { Icon(Icons.Default.Security, "Shield") }, label = { Text("Shield") })
+                NavigationBarItem(selected = selectedTab == 3, onClick = { selectedTab = 3 }, icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") })
             }
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                0 -> DashboardScreen(dnsManager)
-                1 -> AIInsightsScreen()
-                2 -> SettingsScreen(themeMode, onThemeChange)
+                0 -> DashboardScreen(dnsManager, onToggleVpn)
+                1 -> LogsScreen(dnsManager)
+                2 -> ShieldProfileScreen(dnsManager)
+                3 -> SettingsScreen(themeMode, onThemeChange, dnsManager)
             }
         }
     }
 }
 
 @Composable
-fun DashboardScreen(dnsManager: DNSManager) {
-    var stats by remember { mutableStateOf<org.json.JSONObject?>(null) }
-    LaunchedEffect(Unit) { while(true) { stats = dnsManager.getStats(); delay(5000) } }
+fun DashboardScreen(dnsManager: DNSManager, onToggleVpn: () -> Unit) {
+    var stats by remember { mutableStateOf<JSONObject?>(null) }
+    LaunchedEffect(Unit) {
+        while(true) {
+            stats = dnsManager.getStats()
+            delay(3000)
+        }
+    }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("PYHOLEX MESH", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
-        Spacer(modifier = Modifier.height(10.dp))
-        Text("Next-Gen Mobile DNS Security", style = MaterialTheme.typography.bodyMedium)
-
+    Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
+        Text("PYHOLEX DASHBOARD", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.height(20.dp))
 
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Service: RUNNING", color = Color(0xFF78DC77))
-                Text("Queries Today: ${stats?.optInt("queries_today") ?: 52314}")
-                Text("Threats Blocked: ${stats?.optInt("blocked_today") ?: 18403}", color = Color(0xFFFFB4A9))
-                Text("Battery Impact: Minimal (<0.1%)", color = Color(0xFF33A0FE))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("System Status: ", style = MaterialTheme.typography.titleMedium)
+                    Text("PROTECTED", color = Color(0xFF78DC77), style = MaterialTheme.typography.titleMedium)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    StatItem("Total Queries", stats?.optInt("total_queries") ?: 0)
+                    StatItem("Blocked", stats?.optInt("blocked_queries") ?: 0, Color(0xFFFFB4A9))
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                LinearProgressIndicator(
+                    progress = (stats?.optDouble("blocking_percentage")?.div(100.0) ?: 0.0).toFloat(),
+                    modifier = Modifier.fillMaxWidth().height(8.dp),
+                    color = Color(0xFF78DC77)
+                )
+                Text("${String.format("%.1f", stats?.optDouble("blocking_percentage") ?: 0.0)}% Filtering Efficiency",
+                    style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Current Active Profile", style = MaterialTheme.typography.titleSmall)
+                Text(stats?.optString("profile")?.uppercase() ?: "STANDARD",
+                    style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.secondary)
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+        Button(onClick = onToggleVpn, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Security, null)
+            Spacer(Modifier.width(8.dp))
+            Text("Switch VPN Profile")
+        }
+    }
+}
+
+@Composable
+fun StatItem(label: String, value: Int, color: Color = MaterialTheme.colorScheme.onSurface) {
+    Column {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+        Text(value.toString(), style = MaterialTheme.typography.headlineSmall, color = color)
+    }
+}
+
+@Composable
+fun LogsScreen(dnsManager: DNSManager) {
+    var logs by remember { mutableStateOf(JSONArray()) }
+    LaunchedEffect(Unit) {
+        while(true) {
+            logs = dnsManager.getLogs()
+            delay(5000)
+        }
+    }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Network Activity", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items((0 until logs.length()).map { logs.getJSONObject(it) }) { log ->
+                LogItem(log)
+                Divider(color = Color.DarkGray.copy(alpha = 0.2f))
             }
         }
     }
 }
 
 @Composable
-fun AIInsightsScreen() {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("AI Threat Detection", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(10.dp))
-        Text("Real-time heuristic analysis is active.")
-        LinearProgressIndicator(progress = 0.85f, modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.primary)
-        Spacer(modifier = Modifier.height(20.dp))
-        Text("Blocked via Entropy: 2,405")
-        Text("Decentralized Sync: Active (1,402 peers)")
+fun LogItem(log: JSONObject) {
+    val blocked = log.optBoolean("blocked")
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(log.optString("domain"), style = MaterialTheme.typography.bodyLarge, maxLines = 1)
+            Row {
+                Text(log.optString("timestamp").split(" ").last(), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Spacer(Modifier.width(8.dp))
+                Text("via ${log.optString("client_ip")}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            }
+        }
+        Badge(
+            containerColor = if (blocked) Color(0xFFFFB4A9) else Color(0xFF78DC77)
+        ) {
+            Text(if (blocked) "BLOCKED" else "ALLOWED", color = Color.Black, modifier = Modifier.padding(4.dp))
+        }
     }
 }
 
 @Composable
-fun SettingsScreen(themeMode: Int, onThemeChange: (Int) -> Unit) {
+fun ShieldProfileScreen(dnsManager: DNSManager) {
+    val scope = rememberCoroutineScope()
+    var currentProfile by remember { mutableStateOf("standard") }
+
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("App Settings", style = MaterialTheme.typography.headlineMedium)
+        Text("Shield Profiles", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(20.dp))
 
-        Text("Theme Selection")
-        Row {
-            RadioButton(selected = themeMode == 0, onClick = { onThemeChange(0) })
-            Text("Auto", Modifier.padding(top = 12.dp))
-            RadioButton(selected = themeMode == 1, onClick = { onThemeChange(1) })
-            Text("Light", Modifier.padding(top = 12.dp))
-            RadioButton(selected = themeMode == 2, onClick = { onThemeChange(2) })
-            Text("Dark", Modifier.padding(top = 12.dp))
+        ProfileCard("Standard Shield", "Balanced protection with global community blocklists.", currentProfile == "standard") {
+            scope.launch { if(dnsManager.setProfile("standard")) currentProfile = "standard" }
+        }
+        Spacer(Modifier.height(12.dp))
+        ProfileCard("Strict Protection", "Maximum privacy. Blocks all known trackers, telemetry and analytics.", currentProfile == "strict") {
+            scope.launch { if(dnsManager.setProfile("strict")) currentProfile = "strict" }
+        }
+        Spacer(Modifier.height(12.dp))
+        ProfileCard("DNS Resolver Only", "No filtering. High-performance local DNS resolution only.", currentProfile == "dns_only") {
+            scope.launch { if(dnsManager.setProfile("dns_only")) currentProfile = "dns_only" }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-        Button(onClick = { }, modifier = Modifier.fillMaxWidth()) { Text("Update Gravity (Sync Blocklists)") }
-        Spacer(modifier = Modifier.height(10.dp))
-        Button(onClick = { }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)) { Text("Export Configuration") }
+        Spacer(modifier = Modifier.height(24.dp))
+        Text("Active Clients", style = MaterialTheme.typography.titleMedium)
+        Card(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text("127.0.0.1 (Localhost)", style = MaterialTheme.typography.bodyLarge)
+                Text("Status: Connected", color = Color(0xFF78DC77), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+@Composable
+fun ProfileCard(title: String, desc: String, active: Boolean, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(title, style = MaterialTheme.typography.titleLarge)
+                if (active) {
+                    Spacer(Modifier.width(8.dp))
+                    Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+            Text(desc, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+}
+
+@Composable
+fun SettingsScreen(themeMode: Int, onThemeChange: (Int) -> Unit, dnsManager: DNSManager) {
+    val scope = rememberCoroutineScope()
+    var updating by remember { mutableStateOf(false) }
+    var urls by remember { mutableStateOf(JSONArray()) }
+
+    LaunchedEffect(Unit) {
+        urls = dnsManager.getBlocklistUrls()
+    }
+
+    Column(modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
+        Text("System Settings", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text("Upstream DNS Protocol", style = MaterialTheme.typography.titleSmall)
+        var upstream by remember { mutableStateOf("8.8.8.8:53") }
+        OutlinedTextField(
+            value = upstream,
+            onValueChange = { upstream = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Primary IPv4 Resolver") },
+            trailingIcon = { IconButton(onClick = { /* save */ }) { Icon(Icons.Default.Save, null) } }
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+        Text("Content Filtering", style = MaterialTheme.typography.titleSmall)
+        ListItem(
+            headlineContent = { Text("Parental Control Filter") },
+            supportingContent = { Text("Auto-block adult, gambling, and dangerous content") },
+            trailingContent = {
+                Switch(checked = false, onCheckedChange = { scope.launch { dnsManager.toggleParentalControl() } })
+            }
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+        Text("Gravity Blocklists", style = MaterialTheme.typography.titleSmall)
+        (0 until urls.length()).forEach { i ->
+            Text(urls.getString(i), style = MaterialTheme.typography.bodySmall, color = Color.Gray, modifier = Modifier.padding(vertical = 2.dp))
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(
+            onClick = { scope.launch { updating = true; dnsManager.updateBlocklists(); updating = false } },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !updating
+        ) {
+            if (updating) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
+            else Text("Synchronize Remote Lists")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        OutlinedButton(onClick = { }, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.FileDownload, null)
+            Spacer(Modifier.width(8.dp))
+            Text("Export SQLite Audit Log")
+        }
     }
 }
 
