@@ -1189,7 +1189,7 @@ dependencies = [
 
 [[package]]
 name = "pyholex-engine"
-version = "0.5.2"
+version = "5.2.0"
 dependencies = [
  "chrono",
  "jni",
