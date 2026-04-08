@@ -1,33 +1,11 @@
-name: PyHoleX CI Pipeline
+name: Build Debug APK (Manual)
 
 on:
-  push:
-    branches: [ main, feature/* ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  test-rust:
-    name: Test Rust DNS Engine
-    runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-      - name: Run Tests
-        run: |
-          cd rust-dns-engine
-          cargo test
-
-  build-apk:
+  build:
     name: Build Debug APK
-    needs: test-rust
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -49,8 +27,8 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: pyholex-debug-apk
+          name: debug-apk
           path: app/build/outputs/apk/debug/*.apk
