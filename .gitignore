@@ -1,0 +1,8 @@
+.gradle/
+/build/
+/app/build/
+/app/.cxx/
+/rust-dns-engine/target/
+*.apk
+/local.properties
+.DS_Store
