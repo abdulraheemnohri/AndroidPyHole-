@@ -1,0 +1,74 @@
+name: Build Release APK
+
+on:
+  workflow_dispatch:   # Manual trigger
+  release:
+    types: [published]  # GitHub Release trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Generate Wrapper
+        run: gradle wrapper
+
+      - name: Run setup script
+        run: ./build_scripts/setup_python.sh
+
+      # ----------------------------
+      # Keystore decode + signing
+      # ----------------------------
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > pyholex-release-key.jks
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+
+      - name: Sign APK
+        run: |
+          jarsigner -verbose \
+            -keystore pyholex-release-key.jks \
+            -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+            -keypass ${{ secrets.KEY_PASSWORD }} \
+            app/build/outputs/apk/release/app-release.apk \
+            ${{ secrets.KEY_ALIAS }}
+
+      # ----------------------------
+      # Upload signed APK
+      # ----------------------------
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyholex-release-apk
+          path: app/build/outputs/apk/release/*.apk
+
+      # ----------------------------
+      # Optional: Create GitHub Release with APK
+      # ----------------------------
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: app/build/outputs/apk/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
