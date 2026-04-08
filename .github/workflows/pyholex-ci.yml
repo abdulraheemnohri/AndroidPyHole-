@@ -1,15 +1,15 @@
-name: PyHoleX CI & Build
+name: PyHoleX CI Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, feature/* ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   test-rust:
-    name: Test Rust Engine
+    name: Test Rust DNS Engine
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -20,13 +20,13 @@ jobs:
         with:
           toolchain: stable
           override: true
-      - name: Run Rust tests
+      - name: Run Tests
         run: |
           cd rust-dns-engine
           cargo test
 
-  build-debug-apk:
-    name: Build & Upload Debug APK
+  build-apk:
+    name: Build Debug APK
     needs: test-rust
     runs-on: ubuntu-latest
     env:
@@ -40,12 +40,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: aarch64-linux-android
-          override: true
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
@@ -53,7 +49,7 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload Debug APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: pyholex-debug-apk
