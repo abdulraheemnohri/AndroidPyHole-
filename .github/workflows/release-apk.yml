@@ -1,22 +1,23 @@
-name: PyHoleX Android Build
+name: PyHoleX APK Build
 
 on:
 push:
-branches: [ main ]
+branches:
+- main
 workflow_dispatch:
 release:
 types: [created]
 
 jobs:
 build:
-name: Build PyHoleX APK
+name: Build Signed APK
 runs-on: ubuntu-latest
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 steps:
-  - name: Checkout Repo
+  - name: Checkout repository
     uses: actions/checkout@v4
 
   - name: Setup Java
@@ -31,7 +32,7 @@ steps:
   - name: Setup Gradle
     uses: gradle/actions/setup-gradle@v3
 
-  - name: Make Gradlew Executable
+  - name: Make gradlew executable
     run: chmod +x gradlew
 
   - name: Build Release APK
@@ -47,13 +48,13 @@ steps:
       keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
       keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-  - name: Upload Artifact
+  - name: Upload APK artifact
     uses: actions/upload-artifact@v4
     with:
       name: pyholex-release
       path: ${{ steps.sign_app.outputs.signedReleaseFile }}
 
-  - name: Upload To GitHub Release
+  - name: Upload to GitHub Release
     if: github.event_name == 'release'
     uses: softprops/action-gh-release@v1
     with:
