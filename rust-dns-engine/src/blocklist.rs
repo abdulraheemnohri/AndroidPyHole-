@@ -3,12 +3,8 @@ use regex::Regex;
 use serde::{Serialize, Deserialize};
 use std::fs;
 
-#[derive(Serialize, Deserialize, Clone, Copy, PartialEq)]
-pub enum ShieldProfile {
-    Standard,
-    Strict,
-    DNSOnly,
-}
+#[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Debug)]
+pub enum ShieldProfile { Standard, Strict, DNSOnly }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct BlocklistConfig {
@@ -54,9 +50,7 @@ impl Blocklist {
             whitelist: config.custom_whitelist,
             blacklist: config.custom_blacklist,
             urls: config.enabled_urls,
-            regex_cache: config.regex_blacklist.iter()
-                .filter_map(|s| Regex::new(s).ok())
-                .collect(),
+            regex_cache: config.regex_blacklist.iter().filter_map(|s| Regex::new(s).ok()).collect(),
             parental_control: config.parental_control_enabled,
             profile: config.active_profile,
             upstream_dns: config.upstream_dns,
@@ -84,45 +78,22 @@ impl Blocklist {
     }
 
     pub fn is_blocked(&self, domain: &str) -> (bool, Option<String>) {
-        if self.profile == ShieldProfile::DNSOnly {
-            return (false, None);
-        }
-
+        if self.profile == ShieldProfile::DNSOnly { return (false, None); }
         let domain_clean = domain.trim_end_matches('.').to_lowercase();
-
-        if self.whitelist.contains(&domain_clean) {
-            return (false, Some("Whitelisted".to_string()));
-        }
-
-        if self.blacklist.contains(&domain_clean) {
-            return (true, Some("User Blacklisted".to_string()));
-        }
-
-        for re in &self.regex_cache {
-            if re.is_match(&domain_clean) {
-                return (true, Some("Regex Match".to_string()));
-            }
-        }
-
-        if self.domains.contains(&domain_clean) {
-            return (true, Some("Blocklist Match".to_string()));
-        }
-
+        if self.whitelist.contains(&domain_clean) { return (false, Some("Whitelisted".to_string())); }
+        if self.blacklist.contains(&domain_clean) { return (true, Some("User Blacklisted".to_string())); }
+        for re in &self.regex_cache { if re.is_match(&domain_clean) { return (true, Some("Regex Match".to_string())); } }
+        if self.domains.contains(&domain_clean) { return (true, Some("Blocklist Match".to_string())); }
         if self.parental_control {
-            let adult_keywords = ["porn", "sex", "gamble", "casino"];
-            for kw in adult_keywords {
-                if domain_clean.contains(kw) {
-                    return (true, Some("Parental Control Block".to_string()));
-                }
+            for kw in &["porn", "sex", "gamble", "casino"] {
+                if domain_clean.contains(kw) { return (true, Some("Parental Control Block".to_string())); }
             }
         }
-
         if self.profile == ShieldProfile::Strict {
             if domain_clean.starts_with("analytics.") || domain_clean.starts_with("telemetry.") {
                 return (true, Some("Strict Mode Block".to_string()));
             }
         }
-
         (false, None)
     }
 
@@ -134,9 +105,7 @@ impl Blocklist {
                     for line in text.lines() {
                         if line.starts_with("0.0.0.0 ") || line.starts_with("127.0.0.1 ") {
                             let parts: Vec<&str> = line.split_whitespace().collect();
-                            if parts.len() >= 2 {
-                                new_domains.insert(parts[1].to_string());
-                            }
+                            if parts.len() >= 2 { new_domains.insert(parts[1].to_string()); }
                         }
                     }
                 }
@@ -145,5 +114,35 @@ impl Blocklist {
         self.domains = new_domains;
         self.save_config();
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_standard_blocking() {
+        let mut bl = Blocklist::new();
+        bl.domains.insert("ads.example.com".to_string());
+        let (blocked, _) = bl.is_blocked("ads.example.com");
+        assert!(blocked);
+    }
+
+    #[test]
+    fn test_whitelist() {
+        let mut bl = Blocklist::new();
+        bl.domains.insert("google.com".to_string());
+        bl.whitelist.insert("google.com".to_string());
+        let (blocked, _) = bl.is_blocked("google.com");
+        assert!(!blocked);
+    }
+
+    #[test]
+    fn test_strict_mode() {
+        let mut bl = Blocklist::new();
+        bl.profile = ShieldProfile::Strict;
+        let (blocked, _) = bl.is_blocked("analytics.google.com");
+        assert!(blocked);
     }
 }

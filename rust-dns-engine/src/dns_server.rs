@@ -16,7 +16,7 @@ struct DnsState {
 pub async fn run(blocklist: Arc<Mutex<Blocklist>>) -> Result<()> {
     let socket = UdpSocket::bind("127.0.0.1:5353").await?;
     let state = Arc::new(Mutex::new(DnsState {
-        cache: LruCache::new(1000),
+        cache: LruCache::new(2000),
     }));
 
     println!("DNS Engine listening on 127.0.0.1:5353");
@@ -25,7 +25,6 @@ pub async fn run(blocklist: Arc<Mutex<Blocklist>>) -> Result<()> {
     loop {
         let (len, addr) = socket.recv_from(&mut buf).await?;
         let request_data = buf[..len].to_vec();
-
         let bl = blocklist.clone();
         let st = state.clone();
 
@@ -51,7 +50,6 @@ async fn handle_dns_request(request: Message, blocklist: &Arc<Mutex<Blocklist>>,
     if let Some(query) = request.queries().first() {
         let domain = query.name().to_string();
         let client_ip = addr.ip().to_string();
-
         let (is_blocked, upstream) = {
             let bl = blocklist.lock().await;
             (bl.is_blocked(&domain).0, bl.upstream_dns.clone())
@@ -69,36 +67,28 @@ async fn handle_dns_request(request: Message, blocklist: &Arc<Mutex<Blocklist>>,
                     return res;
                 }
             }
-
             let _ = logger::log_query(&domain, &client_ip, false);
-
             if let Ok(upstream_res) = forward_query(&request, &upstream).await {
                 let mut st = state.lock().await;
                 st.cache.put(domain, upstream_res.clone());
                 return upstream_res;
             }
-
             response.set_response_code(ResponseCode::NoError);
         }
         response.add_query(query.clone());
     }
-
     response
 }
 
 async fn forward_query(request: &Message, upstream: &str) -> Result<Message> {
     let upstream_addr: SocketAddr = upstream.parse()?;
     let socket = UdpSocket::bind("0.0.0.0:0").await?;
-
     let mut buf = Vec::with_capacity(512);
     let mut encoder = BinEncoder::new(&mut buf);
     request.emit(&mut encoder)?;
-
     socket.send_to(&buf, upstream_addr).await?;
-
     let mut res_buf = [0u8; 2048];
     let (len, _) = tokio::time::timeout(std::time::Duration::from_secs(2), socket.recv_from(&mut res_buf)).await??;
-
     let mut decoder = BinDecoder::new(&res_buf[..len]);
     Ok(Message::read(&mut decoder)?)
 }

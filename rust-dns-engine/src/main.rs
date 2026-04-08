@@ -6,9 +6,7 @@ use pyhole_rust::{logger, api, dns_server};
 #[tokio::main]
 async fn main() -> pyhole_rust::Result<()> {
     println!("Starting PyHoleX High-Performance Engine...");
-
     let blocklist = Arc::new(Mutex::new(Blocklist::new()));
-
     logger::init_db().map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
 
     let api_bl = blocklist.clone();

@@ -53,7 +53,6 @@ pub fn get_stats() -> Result<serde_json::Value> {
     let conn = Connection::open("pyholex_logs.db")?;
     let total: i64 = conn.query_row("SELECT COUNT(*) FROM queries", [], |r| r.get(0))?;
     let blocked: i64 = conn.query_row("SELECT COUNT(*) FROM queries WHERE blocked = 1", [], |r| r.get(0))?;
-
     Ok(serde_json::json!({
         "status": "running",
         "total_queries": total,
