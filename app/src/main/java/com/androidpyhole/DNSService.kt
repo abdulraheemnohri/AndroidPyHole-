@@ -13,30 +13,33 @@ import androidx.core.app.NotificationCompat
 
 class DNSService : Service() {
     private var engineThread: Thread? = null
-    private val rustEngine = RustEngine()
+    private val nativeEngine = NativeEngine()
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         val notification: Notification = NotificationCompat.Builder(this, "pyholex_channel")
             .setContentTitle("PyHoleX DNS Protection")
-            .setContentText("DNS Filtering is Active")
+            .setContentText("Native Engine: ${nativeEngine.stringFromJNI()}")
             .setSmallIcon(android.R.drawable.ic_lock_lock)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
         startForeground(1, notification)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.i("DNSService", "Starting PyHoleX Native Engine...")
-
-        try {
-            Log.i("DNSService", "Engine Status: ${rustEngine.getEngineStatus()}")
-        } catch (e: Exception) {
-            Log.e("DNSService", "Engine Error: ${e.message}")
-        }
+        Log.i("DNSService", "Starting PyHoleX Native Service...")
 
         engineThread = Thread {
-            Log.i("DNSService", "Native DNS loop started on 127.0.0.1:5353")
+            try {
+                Log.i("DNSService", "Native DNS loop active on 127.0.0.1:5353")
+                while (!Thread.currentThread().isInterrupted) {
+                    // Logic to listen on UDP port 5353 and call nativeEngine.processDnsPacket()
+                    Thread.sleep(10000)
+                }
+            } catch (e: InterruptedException) {
+                Log.i("DNSService", "Engine thread interrupted")
+            }
         }
         engineThread?.start()
 
@@ -48,7 +51,7 @@ class DNSService : Service() {
             val serviceChannel = NotificationChannel(
                 "pyholex_channel",
                 "PyHoleX DNS Service Channel",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW
             )
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(serviceChannel)
@@ -58,7 +61,7 @@ class DNSService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
-        super.onDestroy()
         engineThread?.interrupt()
+        super.onDestroy()
     }
 }

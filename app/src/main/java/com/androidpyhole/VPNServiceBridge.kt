@@ -13,6 +13,7 @@ import java.util.concurrent.Executors
 class VPNServiceBridge : VpnService() {
     private var vpnInterface: ParcelFileDescriptor? = null
     private val executorService: ExecutorService = Executors.newSingleThreadExecutor()
+    private val nativeEngine = NativeEngine()
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         setupVPN()
@@ -24,11 +25,12 @@ class VPNServiceBridge : VpnService() {
         val builder = Builder()
         builder.setSession("PyHoleX Global")
         builder.addAddress("10.0.0.2", 32)
+        // Redirect DNS queries to our internal DNS server
         builder.addDnsServer("127.0.0.1")
         builder.addRoute("0.0.0.0", 0)
         builder.setBlocking(true)
         vpnInterface = builder.establish()
-        Log.i("VPNService", "VPN established successfully")
+        Log.i("VPNService", "VPN interface established")
     }
 
     private fun runVpnLoop() {
@@ -41,16 +43,20 @@ class VPNServiceBridge : VpnService() {
             while (!Thread.interrupted()) {
                 val length = input.read(packet.array())
                 if (length > 0) {
-                    // This is where low-level IP packet handling occurs
-                    // DNS packets (UDP port 53) are redirected by the OS to our DNS server
-                    // We simply pass through non-DNS traffic in this blueprint
+                    // Inspect packet headers (simplified)
+                    val protocol = packet.get(9).toInt()
+                    if (protocol == 17) { // UDP
+                        // Potentially a DNS packet if destined for port 53
+                        // nativeEngine.processDnsPacket(...) could be called here
+                    }
+
                     packet.limit(length)
                     output.write(packet.array(), 0, length)
                     packet.clear()
                 }
             }
         } catch (e: Exception) {
-            Log.e("VPNService", "Loop error: ${e.message}")
+            Log.e("VPNService", "Vpn loop error: ${e.message}")
         }
     }
 
