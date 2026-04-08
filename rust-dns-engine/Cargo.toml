@@ -1,6 +1,6 @@
 [package]
 name = "pyholex-engine"
-version = "5.2.0"
+version = "5.2.1"
 edition = "2021"
 
 [lib]
@@ -22,7 +22,9 @@ rusqlite = "0.28"
 warp = "0.3"
 log = "0.4"
 jni = "0.21"
-chrono = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
 reqwest = { version = "0.11", features = ["json", "blocking"] }
 regex = "1.5"
 lru = "0.7"
+bytes = "1.0"
+once_cell = "1.8"
