@@ -1,21 +1,18 @@
-name: Build and Release APK (v5.2.1)
+name: Build Signed Release APK (Manual)
 
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build:
-    name: Build, Sign & Release
+    name: Build & Sign Release APK
     runs-on: ubuntu-latest
+
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -33,15 +30,14 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install Android SDK Components
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-34"
+          sdkmanager "build-tools;29.0.3"
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
-
-      - name: Extract Version
-        id: get_version
-        run: |
-          VERSION_NAME=$(grep "versionName" app/build.gradle | head -n 1 | awk -F'"' '{print $2}')
-          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-          echo "tag=v$VERSION_NAME" >> $GITHUB_OUTPUT
 
       - name: Build Release APK
         run: ./gradlew assembleRelease
@@ -55,29 +51,9 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-          buildToolsVersion: "34.0.0"
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload Signed APK
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ steps.get_version.outputs.tag }}
-          name: Release ${{ env.VERSION_NAME }}
-          draft: false
-          prerelease: false
-          files: |
-            ${{ steps.sign_app.outputs.signedReleaseFile }}
-          body: |
-            ## PyHoleX v${{ env.VERSION_NAME }} - Production Shield
-
-            ### 🚀 Features
-            - **Native Rust Engine**: High-performance asynchronous DNS resolution.
-            - **AI Guard**: Heuristic DGA and tracker detection.
-            - **Sustainability Metrics**: Real-time tracking of data and energy savings.
-            - **Material 3 UI**: Full control over blocklists, logs, and system settings.
-            - **Rootless Operation**: VPNService integration for all-device coverage.
-
-            ### 🛠️ Technical Stack
-            - Rust Core (tokio, trust-dns)
-            - Kotlin (Jetpack Compose)
-            - C++ Native Fast-path
-            - SQLite Log Retention
+          name: pyholex-release-signed
+          path: ${{ steps.sign_app.outputs.signedReleaseFile }}
