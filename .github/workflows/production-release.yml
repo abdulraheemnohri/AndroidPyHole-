@@ -1,0 +1,87 @@
+name: Production Multi-ABI Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Multi-ABI APKs
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Rust Targets
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          targets: aarch64-linux-android, armv7-linux-androideabi, i686-linux-android, x86_64-linux-android
+          override: true
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Extract Metadata
+        id: meta
+        run: |
+          VERSION=$(grep "versionName" app/build.gradle | head -n 1 | awk -F'"' '{print $2}')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build All Flavors & ABIs
+        run: ./gradlew assembleRelease
+
+      - name: Sign Production APKs
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: app/build/outputs/apk/
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+          buildToolsVersion: "34.0.0"
+
+      - name: Create Production Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: PyHoleX Production Release ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+          files: |
+            ${{ steps.sign_app.outputs.signedReleaseFile }}/**/*.apk
+          body: |
+            ## PyHoleX v${{ env.VERSION }} - Multi-ABI Shield
+
+            This release provides optimized builds for all major Android architectures and API levels.
+
+            ### 📱 Target Flavors
+            - **Modern**: Optimized for Android 13+ (API 33)
+            - **Legacy**: Compatible with Android 10+ (API 29)
+
+            ### 🏗️ Supported Architectures
+            - `arm64-v8a`: High-performance mobile
+            - `armeabi-v7a`: Legacy mobile
+            - `x86_64`: Modern emulators / ChromeOS
+            - `x86`: Legacy emulators
+
+            ### 🛡️ Core Infrastructure
+            - **Rust DNS Engine**: Validated against unit tests.
+            - **AI Guard**: Active heuristic blocking.
+            - **Native Filter**: C++ fast-path enabled.

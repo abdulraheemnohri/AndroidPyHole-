@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- background -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/pyholex_bg"/>
+        </shape>
+    </item>
+
+    <!-- centered logo -->
+    <item
+        android:gravity="center"
+        android:drawable="@drawable/ic_pyhole_logo"/>
+
+</layer-list>
