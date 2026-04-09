@@ -20,32 +20,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags ""
-                abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
             }
-        }
-    }
-
-    // ABI Splitting for optimized APK sizes
-    splits {
-        abi {
-            enable true
-            reset()
-            include "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
-            universalApk true
-        }
-    }
-
-    flavorDimensions "api"
-    productFlavors {
-        modern {
-            dimension "api"
-            minSdk 33
-            versionNameSuffix "-android13plus"
-        }
-        legacy {
-            dimension "api"
-            minSdk 29
-            versionNameSuffix "-android10plus"
         }
     }
 
@@ -95,6 +70,7 @@ dependencies {
     implementation 'androidx.navigation:navigation-compose:2.7.7'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'androidx.work:work-runtime-ktx:2.8.1'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
