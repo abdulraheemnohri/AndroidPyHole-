@@ -30,7 +30,8 @@ class DNSService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (!isEngineStarted) {
             try {
-                rustEngine.startNativeEngine()
+                val storagePath = filesDir.absolutePath
+                rustEngine.startNativeEngine(storagePath)
                 isEngineStarted = true
                 Log.i("DNSService", "Native Rust Engine started successfully")
             } catch (e: Exception) {
@@ -43,7 +44,6 @@ class DNSService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
-        // Rust engine currently runs in a spawned thread and doesn't have a clean stop JNI call in this MVP
         super.onDestroy()
     }
 }

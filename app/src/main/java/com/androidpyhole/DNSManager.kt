@@ -1,6 +1,6 @@
 package com.androidpyhole
 
-import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -34,7 +34,7 @@ class DNSManager {
     }
 
     suspend fun searchLogs(query: String = "", blocked: Boolean? = null, category: String? = null, limit: Int = 100): JSONArray = withContext(Dispatchers.IO) {
-        val urlBuilder = "$apiBaseUrl/dns/logs".toHttpUrl().newBuilder()
+        val urlBuilder = HttpUrl.parse("$apiBaseUrl/dns/logs")!!.newBuilder()
         if (query.isNotEmpty()) urlBuilder.addQueryParameter("q", query)
         if (blocked != null) urlBuilder.addQueryParameter("blocked", blocked.toString())
         if (category != null) urlBuilder.addQueryParameter("category", category)
