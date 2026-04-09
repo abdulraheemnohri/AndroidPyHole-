@@ -1,0 +1,45 @@
+name: Rust Core Validation
+
+on:
+  push:
+    paths:
+      - 'rust-dns-engine/**'
+  pull_request:
+    paths:
+      - 'rust-dns-engine/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Unit Tests & Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: clippy, rustfmt
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            rust-dns-engine/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('rust-dns-engine/Cargo.lock') }}
+
+      - name: Run Tests
+        run: |
+          cd rust-dns-engine
+          cargo test --verbose
+
+      - name: Run Clippy
+        run: |
+          cd rust-dns-engine
+          cargo clippy -- -D warnings
