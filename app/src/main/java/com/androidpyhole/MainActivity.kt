@@ -77,7 +77,7 @@ fun LockScreen(onUnlocked: () -> Unit) {
     var pin by remember { mutableStateOf("") }
     val context = LocalContext.current
     val actualPin = SettingsRepository(context).getAppLockPin()
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(40.dp), Alignment.CenterHorizontally, Arrangement.Center) {
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(40.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Icon(Icons.Default.Lock, null, Modifier.size(64.dp), MaterialTheme.colorScheme.primary); Spacer(Modifier.height(24.dp)); Text("SHIELD LOCKED", fontWeight = FontWeight.Black, fontSize = 24.sp); Spacer(Modifier.height(16.dp)); OutlinedTextField(value = pin, onValueChange = { if(it.length <= 4) pin = it; if(it == actualPin) onUnlocked() }, label = { Text("4-Digit PIN") }, modifier = Modifier.width(200.dp))
     }
 }
@@ -108,68 +108,38 @@ fun MainContent(dnsManager: DNSManager, settings: SettingsRepository, excludedAp
 
 @Composable
 fun DashboardScreen(dnsManager: DNSManager, onToggleVpn: () -> Unit) {
+    val scope = rememberCoroutineScope()
     var stats by remember { mutableStateOf<JSONObject?>(null) }
-    LaunchedEffect(Unit) { while(true) { stats = dnsManager.getStats(); delay(3000) } }
-    Column(Modifier.padding(16.dp).fillMaxSize().verticalScroll(rememberScrollState())) {
-        Text("PYHOLEX ENGINE", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black); Spacer(Modifier.height(20.dp))
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
-                Text("STATUS: PROTECTED", color = Color(0xFF78DC77), fontWeight = FontWeight.Bold); Spacer(Modifier.height(16.dp))
-                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) { StatItem("Queries", stats?.optInt("total_queries") ?: 0); StatItem("Blocked", stats?.optInt("blocked_queries") ?: 0, Color(0xFFFFB4A9)) }
-                Spacer(Modifier.height(16.dp)); LinearProgressIndicator(progress = (stats?.optDouble("blocking_percentage")?.div(100.0) ?: 0.0).toFloat(), Modifier.fillMaxWidth().height(8.dp), Color(0xFF78DC77))
-            }
+    LaunchedEffect(Unit) { while(true) { stats = dnsManager.getStats(); delay(5000) } }
+    Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("PYHOLEX", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black)
+            FilledTonalButton(onClick = onToggleVpn) { Icon(Icons.Default.PowerSettingsNew, null); Spacer(Modifier.width(8.dp)); Text("Engage") }
         }
-        Spacer(Modifier.height(24.dp)); Text("ACTIVE THREAT INTELLIGENCE", fontWeight = FontWeight.Bold)
-        Card(Modifier.fillMaxWidth().padding(top = 8.dp)) { Column(Modifier.padding(16.dp)) { SustainabilityRow(Icons.Default.Dns, "Domains Blocked", "${stats?.optInt("domains_loaded") ?: 0}", Color(0xFF78DC77)); SustainabilityRow(Icons.Default.Update, "Last Gravity Sync", stats?.optString("last_sync")?.split("T")?.first() ?: "Never", Color(0xFF33A0FE)); SustainabilityRow(Icons.Default.Speed, "Avg Latency", "${stats?.optDouble("avg_latency_ms") ?: 0.0} ms", Color(0xFF8BC34A)) } }
-        Spacer(Modifier.height(24.dp)); Text("APP AUDIT (TOP BY TRAFFIC)", fontWeight = FontWeight.Bold)
-        Card(Modifier.fillMaxWidth().padding(top = 8.dp)) {
-            Column(Modifier.padding(12.dp)) {
-                val appStats = stats?.optJSONArray("app_stats") ?: JSONArray()
-                if (appStats.length() == 0) Text("Aggregating local metrics...", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                for (i in 0 until appStats.length()) {
-                    val app = appStats.getJSONObject(i)
-                    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), Alignment.CenterVertically) {
-                        Icon(Icons.Default.Android, null, Modifier.size(16.dp), Color.Gray)
-                        Spacer(Modifier.width(8.dp))
-                        Text(app.optString("package").split(".").last(), Modifier.weight(1f), maxLines = 1, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-                        Text("${app.optInt("blocked")}/${app.optInt("total")}", style = MaterialTheme.typography.labelSmall, color = if(app.optInt("blocked") > 0) Color(0xFFFFB4A9) else Color.Gray)
-                    }
-                }
-            }
-        }
-        Spacer(Modifier.height(24.dp)); Text("ENVIRONMENT IMPACT", fontWeight = FontWeight.Bold)
-        Card(Modifier.fillMaxWidth().padding(top = 8.dp)) { Column(Modifier.padding(16.dp)) { SustainabilityRow(Icons.Default.DataUsage, "Data Conserved", "${stats?.optInt("saved_data_kb") ?: 0} KB", Color(0xFF78DC77)); SustainabilityRow(Icons.Default.Bolt, "Energy Saved", "${String.format("%.2f", stats?.optDouble("saved_power_mwh") ?: 0.0)} mWh", Color(0xFF33A0FE)) } }
-        Spacer(Modifier.height(24.dp)); Button(onClick = onToggleVpn, Modifier.fillMaxWidth()) { Text("Rotate Resolution Interface") }
+        Spacer(Modifier.height(24.dp)); Text("REAL-TIME METRICS", fontWeight = FontWeight.Bold); Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) { MetricCard("Blocked", stats?.optInt("blocked_today")?.toString() ?: "0", Modifier.weight(1f), Color(0xFFFFB4A9)); MetricCard("Queries", stats?.optInt("total_queries")?.toString() ?: "0", Modifier.weight(1f), MaterialTheme.colorScheme.primaryContainer) }
+        Spacer(Modifier.height(16.dp)); Text("SUSTAINABILITY", fontWeight = FontWeight.Bold); Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) { MetricCard("Data Saved", stats?.optString("data_saved") ?: "0 MB", Modifier.weight(1f), MaterialTheme.colorScheme.secondaryContainer); MetricCard("Energy", stats?.optString("energy_saved") ?: "0 mAh", Modifier.weight(1f), MaterialTheme.colorScheme.tertiaryContainer) }
+        Spacer(Modifier.height(24.dp)); Text("TRAFFIC THROUGHPUT", fontWeight = FontWeight.Bold); Card(Modifier.fillMaxWidth().height(120.dp).padding(vertical = 8.dp)) { Box(Modifier.fillMaxSize().padding(16.dp), Alignment.BottomStart) { Text("QPS: ${stats?.optDouble("qps") ?: 0.0}", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black) } }
     }
 }
 
-@Composable fun SustainabilityRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String, color: Color) { Row(Modifier.padding(vertical = 4.dp), Alignment.CenterVertically) { Icon(icon, null, tint = color, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Column { Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray); Text(value, fontWeight = FontWeight.Bold) } } }
-@Composable fun StatItem(label: String, value: Int, color: Color = MaterialTheme.colorScheme.onSurface) { Column { Text(label, style = MaterialTheme.typography.labelMedium, color = Color.Gray); Text(value.toString(), style = MaterialTheme.typography.headlineMedium, color = color, fontWeight = FontWeight.ExtraBold) } }
+@Composable fun MetricCard(label: String, value: String, modifier: Modifier, color: Color) { Card(modifier = modifier, colors = CardDefaults.cardColors(containerColor = color)) { Column(Modifier.padding(16.dp)) { Text(label, style = MaterialTheme.typography.labelMedium); Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black) } } }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShieldScreen(dnsManager: DNSManager, onExportLogs: () -> Unit) {
     val scope = rememberCoroutineScope()
-    var stats by remember { mutableStateOf<JSONObject?>(null) }
-    var logs by remember { mutableStateOf(JSONArray()) }
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("all") }
-    LaunchedEffect(searchQuery, selectedCategory) { while(true) { stats = dnsManager.getStats(); logs = dnsManager.searchLogs(searchQuery, category = if(selectedCategory == "all") null else selectedCategory); delay(3000) } }
+    var logs by remember { mutableStateOf(JSONArray()) }; var stats by remember { mutableStateOf<JSONObject?>(null) }
+    LaunchedEffect(Unit) { stats = dnsManager.getStats(); logs = dnsManager.searchLogs(limit = 50) }
     Column(Modifier.padding(16.dp)) {
-        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) { Text("SHIELD AUDIT", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); IconButton(onClick = onExportLogs) { Icon(Icons.Default.Share, null) } }
-        Spacer(Modifier.height(16.dp)); OutlinedTextField(value = searchQuery, onValueChange = { searchQuery = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Search Domains or Apps...") }, leadingIcon = { Icon(Icons.Default.Search, null) })
-        Spacer(Modifier.height(12.dp)); Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
-            FilterChip(selected = selectedCategory == "all", onClick = { selectedCategory = "all" }, label = { Text("All") })
-            FilterChip(selected = selectedCategory == "ads", onClick = { selectedCategory = "ads" }, label = { Text("Ads") })
-            FilterChip(selected = selectedCategory == "malware", onClick = { selectedCategory = "malware" }, label = { Text("Threats") })
-            FilterChip(selected = selectedCategory == "tracker", onClick = { selectedCategory = "tracker" }, label = { Text("Tracks") })
-        }
-        Spacer(Modifier.height(12.dp)); Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) { ShieldCard("Standard", stats?.optString("profile") == "standard", Modifier.weight(1f)) { scope.launch { dnsManager.setProfile("standard") } }; ShieldCard("Strict", stats?.optString("profile") == "strict", Modifier.weight(1f)) { scope.launch { dnsManager.setProfile("strict") } } }
-        Spacer(Modifier.height(24.dp)); LazyColumn(Modifier.weight(1f)) { items((0 until logs.length()).map { logs.getJSONObject(it) }) { log -> ListItem(headlineContent = { Text(log.optString("domain"), maxLines = 1, fontSize = 14.sp, fontWeight = FontWeight.Bold) }, supportingContent = { Text("${log.optString("app_package").split(".").last()} | ${log.optString("reason", "Passed")}", fontSize = 10.sp) }, trailingContent = { if (log.optBoolean("blocked")) Badge(containerColor = Color(0xFFFFB4A9)) { Text(log.optString("category").toUpperCase()) } } ); Divider(color = Color.Gray.copy(alpha = 0.1f)) } }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text("SHIELD STACK", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); IconButton(onClick = onExportLogs) { Icon(Icons.Default.FileDownload, null) } }
+        Spacer(Modifier.height(16.dp)); Text("PROTECTION PROFILE", fontWeight = FontWeight.Bold); Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) { ShieldCard("Standard", stats?.optString("profile") == "standard", Modifier.weight(1f)) { scope.launch { dnsManager.setProfile("standard") } }; ShieldCard("Strict", stats?.optString("profile") == "strict", Modifier.weight(1f)) { scope.launch { dnsManager.setProfile("strict") } } }
+        Spacer(Modifier.height(24.dp)); LazyColumn(Modifier.weight(1f)) { items((0 until logs.length()).map { logs.getJSONObject(it) }) { log -> ListItem(headlineContent = { Text(log.optString("domain"), maxLines = 1, fontSize = 14.sp, fontWeight = FontWeight.Bold) }, supportingContent = { Text("${log.optString("app_package").split(".").last()} | ${log.optString("reason", "Passed")}", fontSize = 10.sp) }, trailingContent = { if (log.optBoolean("blocked")) Badge(containerColor = Color(0xFFFFB4A9)) { Text(log.optString("category").uppercase()) } } ); HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f)) } }
     }
 }
 
 @Composable fun ShieldCard(title: String, active: Boolean, modifier: Modifier, onClick: () -> Unit) { Card(onClick = onClick, modifier = modifier, colors = CardDefaults.cardColors(containerColor = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)) { Box(Modifier.padding(16.dp).fillMaxWidth(), Alignment.Center) { Text(title, fontWeight = FontWeight.Bold) } } }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GravityScreen(dnsManager: DNSManager) {
     val scope = rememberCoroutineScope()
@@ -179,7 +149,7 @@ fun GravityScreen(dnsManager: DNSManager) {
     LaunchedEffect(Unit) { stats = dnsManager.getStats() }
     Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
         Text("RULE ENGINE", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); Spacer(Modifier.height(16.dp))
-        Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) { FilterChip(selected = selectedList == "gravity", onClick = { selectedList = "gravity" }, label = { Text("Gravity") }); FilterChip(selected = selectedList == "blacklist", onClick = { selectedList = "blacklist" }, label = { Text("Black") }); FilterChip(selected = selectedList == "whitelist", onClick = { selectedList = "whitelist" }, label = { Text("White") }); FilterChip(selected = selectedList == "regex", onClick = { selectedList = "regex" }, label = { Text("Regex") }) }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) { FilterChip(selected = selectedList == "gravity", onClick = { selectedList = "gravity" }, label = { Text("Gravity") }); FilterChip(selected = selectedList == "blacklist", onClick = { selectedList = "blacklist" }, label = { Text("Black") }); FilterChip(selected = selectedList == "whitelist", onClick = { selectedList = "whitelist" }, label = { Text("White") }); FilterChip(selected = selectedList == "regex", onClick = { selectedList = "regex" }, label = { Text("Regex") }) }
         Card(Modifier.fillMaxWidth().padding(top = 16.dp)) { Column(Modifier.padding(16.dp)) { Text("Add Entry", fontWeight = FontWeight.Bold); OutlinedTextField(value = item, onValueChange = { item = it }, label = { Text("Domain or Pattern") }, modifier = Modifier.fillMaxWidth()); Button(onClick = { scope.launch { if (dnsManager.manageList(selectedList, "add", item)) { item = ""; stats = dnsManager.getStats() } } }, Modifier.align(Alignment.End).padding(top = 8.dp)) { Text("Add") } } }
         Spacer(Modifier.height(24.dp)); Text("ACTIVE RULES", fontWeight = FontWeight.Bold)
         val currentList = when(selectedList) { "gravity" -> stats?.optJSONArray("urls"); "blacklist" -> stats?.optJSONArray("blacklist"); "whitelist" -> stats?.optJSONArray("whitelist"); "regex" -> stats?.optJSONArray("regex_rules"); else -> JSONArray() } ?: JSONArray()
@@ -201,21 +171,21 @@ fun SystemScreen(dnsManager: DNSManager, settings: SettingsRepository, excludedA
     LaunchedEffect(Unit) { stats = dnsManager.getStats(); networkDevices = dnsManager.scanNetwork(); val pm = context.packageManager; apps = pm.getInstalledApplications(PackageManager.GET_META_DATA).filter { (it.flags and ApplicationInfo.FLAG_SYSTEM) == 0 }.map { AppInfo(it.loadLabel(pm).toString(), it.packageName) }.sortedBy { it.name } }
     Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
         Text("SYSTEM STACK", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); Spacer(Modifier.height(24.dp))
-        Text("APPEARANCE", fontWeight = FontWeight.Bold); Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), Arrangement.spacedBy(8.dp)) {
+        Text("APPEARANCE", fontWeight = FontWeight.Bold); Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { onThemeChange(1) }, Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)) { Text("Light") }
             Button(onClick = { onThemeChange(2) }, Modifier.weight(1f)) { Text("Dark") }
         }
         Spacer(Modifier.height(16.dp)); Text("NETWORK INVENTORY", fontWeight = FontWeight.Bold); Card(Modifier.fillMaxWidth().height(150.dp).padding(vertical = 8.dp)) { LazyColumn { items((0 until networkDevices.length()).map { networkDevices.getJSONObject(it) }) { dev -> ListItem(headlineContent = { Text(dev.optString("vendor"), fontSize = 12.sp) }, supportingContent = { Text(dev.optString("ip"), fontSize = 10.sp) }, leadingContent = { Icon(Icons.Default.Devices, null) }) } } }
         Spacer(Modifier.height(16.dp)); Text("DIAGNOSTICS", fontWeight = FontWeight.Bold); Card(Modifier.fillMaxWidth().padding(vertical = 8.dp)) { Column(Modifier.padding(16.dp)) { OutlinedTextField(value = diagDomain, onValueChange = { diagDomain = it }, label = { Text("Lookup Domain") }, modifier = Modifier.fillMaxWidth()); Button(onClick = { scope.launch { diagResult = dnsManager.lookup(diagDomain) } }, Modifier.padding(top = 8.dp)) { Text("Run Query") }; if(diagResult.isNotEmpty()) { Text(diagResult, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary) } } }
-        Spacer(Modifier.height(16.dp)); Text("MAINTENANCE", fontWeight = FontWeight.Bold); Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), Arrangement.spacedBy(8.dp)) {
+        Spacer(Modifier.height(16.dp)); Text("MAINTENANCE", fontWeight = FontWeight.Bold); Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { scope.launch { dnsManager.purgeCache() } }, Modifier.weight(1f)) { Text("Purge Cache") }
             Button(onClick = { scope.launch { dnsManager.flushLogs() } }, Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB4A9), contentColor = Color.Black)) { Text("Flush Logs") }
         }
         Spacer(Modifier.height(16.dp)); Text("SECURITY LOCK", fontWeight = FontWeight.Bold); OutlinedTextField(value = appLockPin, onValueChange = { if(it.length <= 4) appLockPin = it; settings.setAppLockPin(if(it.isEmpty()) null else it) }, modifier = Modifier.fillMaxWidth(), label = { Text("4-Digit PIN") }, placeholder = { Text("Disabled") })
         Spacer(Modifier.height(16.dp)); Text("UPSTREAM", fontWeight = FontWeight.Bold); OutlinedTextField(value = upstream, onValueChange = { upstream = it }, modifier = Modifier.fillMaxWidth(), label = { Text("IP:Port") }, trailingIcon = { IconButton(onClick = { scope.launch { if (dnsManager.setUpstream(upstream)) settings.saveUpstreamDns(upstream) } }) { Icon(Icons.Default.Save, null) } })
         Spacer(Modifier.height(16.dp)); Text("SPLIT TUNNELING", fontWeight = FontWeight.Bold); Button(onClick = { showAppSelector = true }, Modifier.fillMaxWidth().padding(top = 8.dp)) { Text("Bypass VPN (${excludedApps.size})") }
-        if (showAppSelector) { AlertDialog(onDismissRequest = { showAppSelector = false }, title = { Text("VPN Bypass") }, text = { Box(Modifier.height(400.dp)) { LazyColumn { items(apps) { app -> Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), Alignment.CenterVertically) { Checkbox(checked = excludedApps.contains(app.packageName), onCheckedChange = { checked -> if (checked) excludedApps.add(app.packageName) else excludedApps.remove(app.packageName); settings.saveExcludedApps(excludedApps.toList()) }); Spacer(Modifier.width(8.dp)); Text(app.name, Modifier.weight(1f), fontSize = 14.sp) } } } } }, confirmButton = { TextButton(onClick = { showAppSelector = false }) { Text("Done") } }) }
-        Spacer(Modifier.height(16.dp)); Text("PORTABILITY", fontWeight = FontWeight.Bold); Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) { Button(onClick = onBackup, Modifier.weight(1f)) { Text("Backup") }; OutlinedButton(onClick = onRestore, Modifier.weight(1f)) { Text("Restore") } }
+        if (showAppSelector) { AlertDialog(onDismissRequest = { showAppSelector = false }, title = { Text("VPN Bypass") }, text = { Box(Modifier.height(400.dp)) { LazyColumn { items(apps) { app -> Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) { Checkbox(checked = excludedApps.contains(app.packageName), onCheckedChange = { checked -> if (checked) excludedApps.add(app.packageName) else excludedApps.remove(app.packageName); settings.saveExcludedApps(excludedApps.toList()) }); Spacer(Modifier.width(8.dp)); Text(app.name, Modifier.weight(1f), fontSize = 14.sp) } } } } }, confirmButton = { TextButton(onClick = { showAppSelector = false }) { Text("Done") } }) }
+        Spacer(Modifier.height(16.dp)); Text("PORTABILITY", fontWeight = FontWeight.Bold); Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = onBackup, Modifier.weight(1f)) { Text("Backup") }; OutlinedButton(onClick = onRestore, Modifier.weight(1f)) { Text("Restore") } }
         Spacer(Modifier.height(24.dp)); Text("Engine: v5.2.1 (Rust Core)", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
     }
 }
