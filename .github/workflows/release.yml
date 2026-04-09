@@ -3,7 +3,7 @@ name: Release APK
 on:
   push:
     tags:
-      - 'v*' # Trigger on tags like v1.0.0
+      - 'v*'
 
 jobs:
   build:
@@ -11,7 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Set up JDK and Android SDK
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
@@ -21,20 +20,17 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v2
 
-      # Build APK
       - name: Build APK
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease
 
-      # Rename APK with version tag
       - name: Rename APK
         run: |
           APK_PATH=$(find app/build/outputs/apk/release -name "*.apk")
           VERSION=${GITHUB_REF#refs/tags/v}
           mv $APK_PATH app/build/outputs/apk/release/pyholex-v$VERSION.apk
 
-      # Upload APK as release asset
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:
